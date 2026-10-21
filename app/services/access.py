@@ -1,4 +1,7 @@
-from datetime import datetime, timezone
+"""Access policy: the core question catalogue is free without a usage cap.
+
+Tribute is an optional support channel and never changes access to core features.
+"""
 from app.core.models import UserEntitlement
 
 
@@ -10,23 +13,15 @@ class AccessDecision:
 
 
 def has_active_subscription(entitlement: UserEntitlement) -> bool:
-    if not entitlement.subscription_active:
-        return False
-    expiry = entitlement.subscription_expires_at
-    return expiry is None or expiry > datetime.now(timezone.utc)
+    """Kept for compatibility with future optional paid add-ons; not required for core access."""
+    return False
 
 
 def can_access_question(entitlement: UserEntitlement, free_limit: int = 7) -> AccessDecision:
-    if has_active_subscription(entitlement):
-        return AccessDecision(True, "active_subscription", free_limit)
-    remaining = max(0, free_limit - entitlement.free_questions_used)
-    if remaining > 0:
-        return AccessDecision(True, "free_question_available", remaining)
-    return AccessDecision(False, "subscription_required", 0)
+    return AccessDecision(True, "unlimited_free_access", -1)
 
 
 def record_question_use(entitlement: UserEntitlement, free_limit: int = 7) -> UserEntitlement:
-    # Only call after a catalogue question is actually delivered successfully.
-    if not has_active_subscription(entitlement) and entitlement.free_questions_used < free_limit:
-        entitlement.free_questions_used += 1
+    """Track use for analytics if desired; never stop access after the former free limit."""
+    entitlement.free_questions_used += 1
     return entitlement

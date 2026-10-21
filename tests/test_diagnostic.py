@@ -76,6 +76,10 @@ def test_interactive_flow_completes_and_adapts_goal(tmp_path, monkeypatch):
     assert result is not None
     assert result["metadata"]["diagnostic"] == "completed"
     assert result["metadata"]["first_question_id"]
+    stored = diagnostic_flow._read(channel, user)
+    assert stored["answers"]["gender"] is None
+    assert stored["answers"]["psychotype"] == "unsure"
+    assert stored["answers"]["age"] == 37
 
     context = diagnostic_flow.adaptive_context(channel, user, "У меня конфликт с партнёром")
     assert "relationships" in context
@@ -96,3 +100,10 @@ def test_diagnostic_can_be_skipped_and_reconfigured(tmp_path, monkeypatch):
     assert first_answer["metadata"]["step"] == "goal"
     restarted = diagnostic_flow.handle_diagnostic_message(channel, user, "сменить тему")
     assert restarted["metadata"]["diagnostic"] == "started"
+
+
+def test_skip_diagnostic_works_without_starting_a_session(tmp_path, monkeypatch):
+    db = tmp_path / "diagnostic.sqlite3"
+    monkeypatch.setattr(diagnostic_flow, "get_settings", lambda: SimpleNamespace(database_url=f"sqlite:///{db}"))
+    result = diagnostic_flow.handle_diagnostic_message("telegram", "new-user", "пропустить диагностику")
+    assert result["metadata"]["diagnostic"] == "skipped"

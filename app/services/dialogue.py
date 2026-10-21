@@ -7,6 +7,13 @@ async def respond(message: IncomingMessage, conversation_summary: str = "") -> O
     text = message.text.strip()
     if not text:
         return OutgoingMessage(text="Напиши сообщение или выбери тему, с которой хочешь начать.")
+    if text.lower() in {"/support", "поддержать", "поддержка"}:
+        if not support_buttons():
+            return OutgoingMessage(text="Добровольная поддержка через Tribute сейчас не включена. Все основные функции остаются бесплатными.")
+        return OutgoingMessage(
+            text="Поддержка Yugatneo BOT полностью добровольна. Все основные функции остаются бесплатными." + support_notice(),
+            buttons=support_buttons(),
+        )
     if text.lower() in {"/start", "start", "начать"}:
         return OutgoingMessage(
             text=(

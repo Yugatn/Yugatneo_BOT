@@ -2,6 +2,7 @@
 
 Tribute is an optional support channel and never changes access to core features.
 """
+from datetime import datetime, timezone
 from app.core.models import UserEntitlement
 
 
@@ -13,8 +14,11 @@ class AccessDecision:
 
 
 def has_active_subscription(entitlement: UserEntitlement) -> bool:
-    """Kept for compatibility with future optional paid add-ons; not required for core access."""
-    return False
+    """Report subscription status for optional future add-ons, never for core access."""
+    if not entitlement.subscription_active:
+        return False
+    expiry = entitlement.subscription_expires_at
+    return expiry is None or expiry > datetime.now(timezone.utc)
 
 
 def can_access_question(entitlement: UserEntitlement, free_limit: int = 7) -> AccessDecision:

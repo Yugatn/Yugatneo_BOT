@@ -14,7 +14,7 @@ from app.services.diagnostic import DiagnosticProfile, prioritize_questions
 settings = get_settings()
 app = FastAPI(
     title=settings.app_name,
-    version="0.4.0",
+    version="0.5.0",
     docs_url=None if settings.app_env.lower() == "production" else "/docs",
     redoc_url=None,
 )

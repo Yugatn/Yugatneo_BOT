@@ -14,7 +14,7 @@ from app.services.monetization import support_buttons, support_notice
 settings = get_settings()
 app = FastAPI(
     title=settings.app_name,
-    version="0.3.0",
+    version="0.4.0",
     docs_url=None if settings.app_env.lower() == "production" else "/docs",
     redoc_url=None,
 )
@@ -123,7 +123,7 @@ async def dev_question(message: IncomingMessage) -> OutgoingMessage:
         buttons=[{"label": "Пропустить вопрос", "value": "question:skip"}] + support_buttons(),
         metadata={
             "access": decision["reason"],
-            "remaining_free": str(decision["remaining_free"]),
+            "access_policy": "unlimited_free",
             "question_id": question.id,
             "category": question.category,
         },

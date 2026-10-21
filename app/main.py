@@ -10,14 +10,16 @@ from app.services.catalog import get_question, load_questions
 from app.services.security import allow_request
 from app.services.human_gate import verify_turnstile_and_issue_code
 from app.services.diagnostic import DiagnosticProfile, prioritize_questions
+from app.api.chat_control import router as chat_control_router
 
 settings = get_settings()
 app = FastAPI(
     title=settings.app_name,
-    version="0.5.0",
+    version="0.6.0",
     docs_url=None if settings.app_env.lower() == "production" else "/docs",
     redoc_url=None,
 )
+app.include_router(chat_control_router)
 
 
 class HumanVerificationRequest(BaseModel):

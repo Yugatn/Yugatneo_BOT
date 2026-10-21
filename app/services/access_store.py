@@ -49,9 +49,6 @@ def claim_question(channel: str, external_user_id: str, free_limit: int = 7) -> 
         active = bool(row["subscription_active"]) and (
             not expires or datetime.fromisoformat(expires) > datetime.now(timezone.utc)
         )
-        if not active and row["free_questions_used"] >= free_limit:
-            conn.execute("COMMIT")
-            return {"allowed": False, "reason": "subscription_required", "remaining_free": 0}
         index = row["total_questions_served"]
         free_used = row["free_questions_used"]
         if not active:
@@ -63,8 +60,9 @@ def claim_question(channel: str, external_user_id: str, free_limit: int = 7) -> 
         conn.execute("COMMIT")
         return {
             "allowed": True,
-            "reason": "active_subscription" if active else "free_question_available",
+            "reason": "active_subscription" if active else "free_access",
             "remaining_free": max(0, free_limit - free_used),
+            "unlimited_free_access": True,
             "question_index": index,
         }
     except Exception:

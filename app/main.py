@@ -1,12 +1,36 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from app.core.config import get_settings
 from app.core.models import IncomingMessage, OutgoingMessage
 from app.services.dialogue import respond
 from app.services.access_store import claim_question
 from app.services.catalog import get_question, load_questions
+from app.services.security import allow_request
 
 settings = get_settings()
-app = FastAPI(title=settings.app_name, version="0.1.0")
+app = FastAPI(title=settings.app_name, version="0.2.0", docs_url=None if settings.app_env.lower() == "production" else "/docs", redoc_url=None)
+
+
+@app.middleware("http")
+async def security_baseline(request: Request, call_next):
+    # A conservative request-size guard. Enforce stricter limits at the reverse proxy too.
+    length = request.headers.get("content-length")
+    if length:
+        try:
+            if int(length) > 32_000:
+                return JSONResponse(status_code=413, content={"detail": "Request too large"})
+        except ValueError:
+            return JSONResponse(status_code=400, content={"detail": "Invalid Content-Length"})
+    client_host = request.client.host if request.client else "unknown"
+    if not allow_request(f"ip:{client_host}", limit=120, window_seconds=60):
+        return JSONResponse(status_code=429, content={"detail": "Too many requests"})
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'"
+    return response
 
 
 @app.get("/health")
@@ -16,7 +40,6 @@ async def health():
 
 @app.get("/dev/catalog")
 async def dev_catalog():
-    """Development endpoint exposing catalog metadata only; disable in production."""
     if settings.app_env.lower() == "production":
         raise HTTPException(status_code=404, detail="Not found")
     questions = load_questions()
@@ -24,10 +47,12 @@ async def dev_catalog():
 
 
 @app.post("/dev/question", response_model=OutgoingMessage)
-async def dev_question(message: IncomingMessage) -> OutgoingMessage:
-    """Development-only endpoint for the next catalogue question and free-limit gate."""
+async def dev_question(message: IncomingMessage, request: Request) -> OutgoingMessage:
     if settings.app_env.lower() == "production":
         raise HTTPException(status_code=404, detail="Not found")
+    subject = f"user:{message.channel.value}:{message.external_user_id}"
+    if not allow_request(subject, limit=20, window_seconds=60):
+        raise HTTPException(status_code=429, detail="Too many requests for this user")
     decision = claim_question(
         message.channel.value,
         message.external_user_id,
@@ -58,7 +83,9 @@ async def dev_question(message: IncomingMessage) -> OutgoingMessage:
 
 @app.post("/dev/message", response_model=OutgoingMessage)
 async def dev_message(message: IncomingMessage) -> OutgoingMessage:
-    """Development-only chat endpoint. Protect or remove before public deployment."""
     if settings.app_env.lower() == "production":
         raise HTTPException(status_code=404, detail="Not found")
+    subject = f"user:{message.channel.value}:{message.external_user_id}"
+    if not allow_request(subject, limit=20, window_seconds=60):
+        raise HTTPException(status_code=429, detail="Too many requests for this user")
     return await respond(message)

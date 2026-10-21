@@ -8,6 +8,7 @@
 
 - Единое ядро диалога, не привязанное к конкретной языковой модели.
 - Каталог коучинговых и рефлексивных вопросов с темами, тегами и подсказками по применению.
+- Не-клиническая предварительная анкета для персонализации порядка вопросов по заявленной теме, возрастной группе и добровольным самоописаниям.
 - Все базовые функции и вопросы доступны бесплатно; Tribute — необязательная добровольная поддержка проекта.
 - Адаптеры каналов: Telegram, Instagram Direct и WhatsApp. MAX — отдельный последующий адаптер после подтверждения доступа к официальному API.
 - Безопасная замена провайдера модели: сейчас mock-движок, позднее OpenAI или другой совместимый провайдер.
@@ -59,12 +60,12 @@ cp .env.example .env
 uvicorn app.main:app --reload
 ```
 
-Пока Telegram/Meta credentials не заданы, приложение запускается в режиме разработки и не принимает реальные сообщения платформ. Подробности: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/SAFETY.md](docs/SAFETY.md), [docs/SECURITY.md](docs/SECURITY.md), [docs/DECONDITIONING.md](docs/DECONDITIONING.md), [docs/CHANNELS.md](docs/CHANNELS.md).
+Пока Telegram/Meta credentials не заданы, приложение запускается в режиме разработки и не принимает реальные сообщения платформ. Предварительная диагностика порядка вопросов: [docs/DIAGNOSTIC.md](docs/DIAGNOSTIC.md). Подробности: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/SAFETY.md](docs/SAFETY.md), [docs/SECURITY.md](docs/SECURITY.md), [docs/DECONDITIONING.md](docs/DECONDITIONING.md), [docs/CHANNELS.md](docs/CHANNELS.md).
 
 ## Структура
 
 - `app/core/` — конфигурация, модели данных, правила доступа.
-- `app/services/` — диалог, каталог вопросов, подписки, безопасность.
+- `app/services/` — диалог, каталог вопросов, адаптивный порядок вопросов, подписки, безопасность.
 - `app/llm/` — интерфейс модели и mock/OpenAI-провайдеры.
 - `app/channels/` — платформенные адаптеры.
 - `data/questions.ru.json` — версионируемый каталог вопросов.

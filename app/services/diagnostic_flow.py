@@ -248,6 +248,9 @@ def handle_diagnostic_message(channel: str, external_user_id: str, text: str) ->
     if text.strip().casefold() in {"/diagnostic_reset", "сбросить диагностику"}:
         clear_diagnostic(channel, external_user_id)
         return {"text": "Настройки диагностики удалены. Напиши «диагностика», чтобы начать заново.", "metadata": {"diagnostic": "reset"}}
+    if text.strip().casefold() in {"/skip_diagnostic", "пропустить диагностику", "отмена диагностики"}:
+        clear_diagnostic(channel, external_user_id)
+        return {"text": "Хорошо, пропускаем анкету. Можешь сразу написать, что хочешь обсудить.", "metadata": {"diagnostic": "skipped"}}
     if text.strip().casefold() in {"порядок вопросов", "какие вопросы дальше", "/question_order"}:
         recommendation = recommendation_for(channel, external_user_id)
         if not recommendation:
@@ -259,10 +262,6 @@ def handle_diagnostic_message(channel: str, external_user_id: str, text: str) ->
         return start_diagnostic(channel, external_user_id)
     if not session or session["completed"]:
         return None
-    if text.strip().casefold() in {"/skip_diagnostic", "пропустить диагностику", "отмена диагностики"}:
-        clear_diagnostic(channel, external_user_id)
-        return {"text": "Хорошо, пропускаем анкету. Можешь сразу написать, что хочешь обсудить.", "metadata": {"diagnostic": "skipped"}}
-
     step = STEPS[session["step_index"]]
     try:
         parsed = _parse(step, text)

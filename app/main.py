@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
+from pathlib import Path
 from pydantic import BaseModel, Field
 from app.core.config import get_settings
 from app.core.models import IncomingMessage, OutgoingMessage
@@ -42,13 +43,29 @@ async def security_baseline(request: Request, call_next):
     response.headers["Referrer-Policy"] = "no-referrer"
     response.headers["Cache-Control"] = "no-store"
     if settings.app_env.lower() == "production":
-        response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'"
+        if request.url.path == "/human/check":
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'none'; script-src 'self' https://challenges.cloudflare.com; "
+                "frame-src https://challenges.cloudflare.com; connect-src 'self'; "
+                "style-src 'self'; img-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
+            )
+        else:
+            response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'"
     return response
 
 
 @app.get("/health")
 async def health():
     return {"status": "ok", "app": settings.app_name, "environment": settings.app_env}
+
+
+@app.get("/human/check", response_class=HTMLResponse)
+async def human_check():
+    if not settings.turnstile_site_key:
+        raise HTTPException(status_code=503, detail="Human verification is not configured")
+    page = (Path(__file__).resolve().parents[1] / "web" / "human-check.html").read_text(encoding="utf-8")
+    page = page.replace("__TURNSTILE_SITE_KEY__", settings.turnstile_site_key)
+    return HTMLResponse(page)
 
 
 @app.post("/human/verify")

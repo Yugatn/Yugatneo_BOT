@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     public_base_url: str | None = None
     subscription_provider: str = "manual"
     turnstile_secret_key: str | None = None
+    turnstile_site_key: str | None = None
     ticket_signing_secret: str | None = None
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", case_sensitive=False)

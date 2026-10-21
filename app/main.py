@@ -119,8 +119,8 @@ async def dev_question(message: IncomingMessage) -> OutgoingMessage:
     )
     question = get_question(decision["question_index"])
     return OutgoingMessage(
-        text=question.text + support_notice(),
-        buttons=[{"label": "Пропустить вопрос", "value": "question:skip"}] + support_buttons(),
+        text=question.text,
+        buttons=[{"label": "Пропустить вопрос", "value": "question:skip"}],
         metadata={
             "access": decision["reason"],
             "access_policy": "unlimited_free",

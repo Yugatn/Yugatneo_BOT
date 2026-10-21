@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     whatsapp_business_account_id: str | None = None
     public_base_url: str | None = None
     subscription_provider: str = "manual"
+    tribute_enabled: bool = False
+    tribute_support_url: str | None = None
+    tribute_paid_product_url: str | None = None
     turnstile_secret_key: str | None = None
     turnstile_site_key: str | None = None
     ticket_signing_secret: str | None = None

@@ -1,6 +1,7 @@
 from app.core.models import IncomingMessage, OutgoingMessage
 from app.llm.factory import get_llm
 from app.services.monetization import support_buttons, support_notice
+from app.services.diagnostic_flow import adaptive_context, handle_diagnostic_message, start_diagnostic
 
 
 async def respond(message: IncomingMessage, conversation_summary: str = "") -> OutgoingMessage:
@@ -14,6 +15,9 @@ async def respond(message: IncomingMessage, conversation_summary: str = "") -> O
             text="Поддержка Yugatneo BOT полностью добровольна. Все основные функции остаются бесплатными." + support_notice(),
             buttons=support_buttons(),
         )
+    if text.casefold() in {"согласен", "согласна", "да, согласен", "да, согласна", "i agree"}:
+        flow = start_diagnostic(message.channel.value, message.external_user_id)
+        return OutgoingMessage(text=flow["text"], buttons=flow.get("buttons", []), metadata=flow.get("metadata", {}))
     if text.lower() in {"/start", "start", "начать"}:
         return OutgoingMessage(
             text=(
@@ -30,6 +34,15 @@ async def respond(message: IncomingMessage, conversation_summary: str = "") -> O
                 {"label": "Отношения", "value": "topic:relationships"},
             ] + support_buttons(),
         )
+    flow = handle_diagnostic_message(message.channel.value, message.external_user_id, text)
+    if flow is not None:
+        return OutgoingMessage(
+            text=flow["text"],
+            buttons=flow.get("buttons", []),
+            metadata={key: str(value) for key, value in flow.get("metadata", {}).items()},
+        )
+    diagnostic_context = adaptive_context(message.channel.value, message.external_user_id, text)
+    combined_summary = "\n".join(part for part in (conversation_summary, diagnostic_context) if part)
     llm = get_llm()
-    reply = await llm.generate_reply(user_text=text, conversation_summary=conversation_summary)
+    reply = await llm.generate_reply(user_text=text, conversation_summary=combined_summary)
     return OutgoingMessage(text=reply)

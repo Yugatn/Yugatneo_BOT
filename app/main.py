@@ -9,7 +9,6 @@ from app.services.access_store import claim_question
 from app.services.catalog import get_question, load_questions
 from app.services.security import allow_request
 from app.services.human_gate import verify_turnstile_and_issue_code
-from app.services.monetization import support_buttons, support_notice
 
 settings = get_settings()
 app = FastAPI(

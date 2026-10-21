@@ -9,6 +9,7 @@ from app.services.access_store import claim_question
 from app.services.catalog import get_question, load_questions
 from app.services.security import allow_request
 from app.services.human_gate import verify_turnstile_and_issue_code
+from app.services.monetization import support_buttons, support_notice
 
 settings = get_settings()
 app = FastAPI(
@@ -116,20 +117,10 @@ async def dev_question(message: IncomingMessage) -> OutgoingMessage:
         message.external_user_id,
         free_limit=settings.free_question_limit,
     )
-    if not decision["allowed"]:
-        return OutgoingMessage(
-            text=(
-                "Ты использовал(а) семь бесплатных вопросов из каталога. "
-                "Чтобы продолжить работу с библиотекой вопросов, нужна активная подписка. "
-                "Подписка пока не подключена в этой версии; платёж не принимай и данные карты не отправляй."
-            ),
-            buttons=[{"label": "О подписке", "value": "subscription:info"}],
-            metadata={"access": "subscription_required"},
-        )
     question = get_question(decision["question_index"])
     return OutgoingMessage(
-        text=question.text,
-        buttons=[{"label": "Пропустить вопрос", "value": "question:skip"}],
+        text=question.text + support_notice(),
+        buttons=[{"label": "Пропустить вопрос", "value": "question:skip"}] + support_buttons(),
         metadata={
             "access": decision["reason"],
             "remaining_free": str(decision["remaining_free"]),

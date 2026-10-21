@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Проверка перед началом — Yugatneo BOT</title>
+  <link rel="stylesheet" href="/human-assets/human-check.css">
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <script src="/human-assets/human-check.js" defer></script>
+</head>
+<body>
+  <main class="panel">
+    <h1>Проверка перед началом</h1>
+    <p>Проверка помогает ограничить автоматический спам. Она не гарантирует, что все автоматизированные атаки будут остановлены.</p>
+    <p>После успешной проверки появится одноразовый код. Отправь его в тот же бот, из которого ты открыл эту страницу. Код действует 5 минут.</p>
+    <div id="challenge" class="cf-turnstile" data-sitekey="__TURNSTILE_SITE_KEY__" data-callback="onHumanChallengePassed" data-expired-callback="onHumanChallengeExpired"></div>
+    <p id="status" role="status" aria-live="polite">Загрузи проверку и выполни её.</p>
+    <section id="result" hidden>
+      <h2>Проверка пройдена</h2>
+      <p>Отправь этот код в исходный чат:</p>
+      <code id="verification-code"></code>
+      <button id="copy-code" type="button">Скопировать код</button>
+      <p>Код привязан к исходному аккаунту и не должен работать в другом чате.</p>
+    </section>
+  </main>
+</body>
+</html>

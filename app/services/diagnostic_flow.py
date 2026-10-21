@@ -247,10 +247,10 @@ def handle_diagnostic_message(channel: str, external_user_id: str, text: str) ->
         questions = recommendation.get("questions", [])
         lines = [f"{index + 1}. {item['text']}" for index, item in enumerate(questions[:5])]
         return {"text": "Ближайшие рекомендованные вопросы (это ориентир, не обязательная программа):\\n" + "\\n".join(lines), "metadata": {"diagnostic": "recommendation_shown"}}
-    if not session or session["completed"]:
-        return None
     if text.strip().casefold() in {"сменить тему", "изменить настройки", "перенастроить вопросы"}:
         return start_diagnostic(channel, external_user_id)
+    if not session or session["completed"]:
+        return None
     if text.strip().casefold() in {"/skip_diagnostic", "пропустить диагностику", "отмена диагностики"}:
         clear_diagnostic(channel, external_user_id)
         return {"text": "Хорошо, пропускаем анкету. Можешь сразу написать, что хочешь обсудить.", "metadata": {"diagnostic": "skipped"}}

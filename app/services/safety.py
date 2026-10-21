@@ -32,10 +32,11 @@ _NEGATED_OR_FICTION_CONTEXT = (
 def classify_crisis_message(text: str) -> str | None:
     """Return 'immediate' or 'concern', or None. Never interpret as a diagnosis."""
     normalized = re.sub(r"\s+", " ", text.casefold()).strip()
-    if any(phrase in normalized for phrase in _NEGATED_OR_FICTION_CONTEXT):
-        return None
+    # Explicit near-term intent or a reported attempt takes precedence over contextual words.
     if any(re.search(pattern, normalized) for pattern in _IMMEDIATE_PATTERNS):
         return "immediate"
+    if any(phrase in normalized for phrase in _NEGATED_OR_FICTION_CONTEXT):
+        return None
     if any(re.search(pattern, normalized) for pattern in _CONCERN_PATTERNS):
         return "concern"
     return None

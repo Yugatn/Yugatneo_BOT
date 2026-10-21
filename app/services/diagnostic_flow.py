@@ -73,11 +73,17 @@ def _subject_key(channel: str, external_user_id: str) -> str:
 def _read(channel: str, external_user_id: str) -> dict[str, Any] | None:
     conn = _connect()
     try:
+        key = _subject_key(channel, external_user_id)
         row = conn.execute(
-            "SELECT step_index, answers_json, completed FROM diagnostic_sessions WHERE subject_key=?",
-            (_subject_key(channel, external_user_id),),
+            "SELECT step_index, answers_json, completed, updated_at FROM diagnostic_sessions WHERE subject_key=?",
+            (key,),
         ).fetchone()
         if not row:
+            return None
+        # Delete abandoned onboarding/profile data after 30 days of inactivity.
+        if conn.execute("SELECT datetime(?) < datetime('now', '-30 days')", (row[3],)).fetchone()[0]:
+            conn.execute("DELETE FROM diagnostic_sessions WHERE subject_key=?", (key,))
+            conn.commit()
             return None
         return {"step_index": row[0], "answers": json.loads(row[1]), "completed": bool(row[2])}
     finally:
@@ -274,9 +280,17 @@ def handle_diagnostic_message(channel: str, external_user_id: str, text: str) ->
         _write(channel, external_user_id, next_index, answers)
         next_step = STEPS[next_index]
         prompt, buttons = _prompt(next_step)
+        buttons = buttons + [{"label": "Пропустить анкету", "value": "пропустить диагностику"}]
         return {"text": prompt, "buttons": buttons, "metadata": {"diagnostic": "in_progress", "step": next_step}}
 
     result = _recommend(answers)
+    # Do not retain free-text gender/psychotype after they have served as optional onboarding inputs.
+    # Exact age is reduced to a representative value for the same broad age band.
+    age = answers.get("age", 30)
+    answers["age"] = 17 if age < 18 else 24 if age < 30 else 37 if age < 45 else 52 if age < 60 else 65
+    answers["gender"] = None
+    answers["psychotype"] = "unsure"
+    result["profile_used"]["psychotype_self_report"] = "unsure"
     answers["recommendation"] = result
     answers["current_goal"] = answers.get("goal", "general")
     answers["turns_since_replan"] = 0

@@ -26,3 +26,8 @@ def test_fictional_or_explicitly_negated_context_is_not_auto_classified():
 
 def test_english_immediate_phrases_are_recognized():
     assert classify_crisis_message("I am going to kill myself today") == "immediate"
+
+
+
+def test_immediate_intent_is_not_suppressed_by_fiction_context():
+    assert classify_crisis_message("В романе персонаж говорит: я собираюсь убить себя сегодня") == "immediate"

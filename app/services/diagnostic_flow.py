@@ -237,6 +237,8 @@ def handle_diagnostic_message(channel: str, external_user_id: str, text: str) ->
     session = _read(channel, external_user_id)
     if text.strip().casefold() in {"/diagnostic", "диагностика", "настроить вопросы", "начать диагностику"}:
         return start_diagnostic(channel, external_user_id)
+    if text.strip().casefold() in {"согласен", "согласна", "да, согласен", "да, согласна", "i agree"} and (not session or session["completed"]):
+        return start_diagnostic(channel, external_user_id)
     if text.strip().casefold() in {"/diagnostic_reset", "сбросить диагностику"}:
         clear_diagnostic(channel, external_user_id)
         return {"text": "Настройки диагностики удалены. Напиши «диагностика», чтобы начать заново.", "metadata": {"diagnostic": "reset"}}

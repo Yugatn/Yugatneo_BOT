@@ -91,6 +91,11 @@ def prioritize_questions(questions: list[Any], profile: DiagnosticProfile, limit
     ordered_categories = [c for c in preferred if c in by_category]
     remaining = sorted(c for c in by_category if c not in ordered_categories)
     ordered_categories.extend(remaining)
+    # Keep trauma-related prompts at the end of the suggested sequence by default.
+    # This does not replace a separate, explicit consent check in the conversation flow.
+    if "trauma-informed" in ordered_categories:
+        ordered_categories.remove("trauma-informed")
+        ordered_categories.append("trauma-informed")
 
     ordered = []
     for category in ordered_categories:

@@ -2,12 +2,19 @@ from app.core.models import IncomingMessage, OutgoingMessage
 from app.llm.factory import get_llm
 from app.services.monetization import support_buttons, support_notice
 from app.services.diagnostic_flow import adaptive_context, handle_diagnostic_message
+from app.services.safety import classify_crisis_message, crisis_response
 
 
 async def respond(message: IncomingMessage, conversation_summary: str = "") -> OutgoingMessage:
     text = message.text.strip()
     if not text:
         return OutgoingMessage(text="Напиши сообщение или выбери тему, с которой хочешь начать.")
+    crisis_level = classify_crisis_message(text)
+    if crisis_level:
+        return OutgoingMessage(
+            text=crisis_response(crisis_level),
+            metadata={"safety": "crisis_support", "level": crisis_level},
+        )
     if text.lower() in {"/support", "поддержать", "поддержка"}:
         if not support_buttons():
             return OutgoingMessage(text="Добровольная поддержка через Tribute сейчас не включена. Все основные функции остаются бесплатными.")

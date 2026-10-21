@@ -26,9 +26,8 @@ async def respond(message: IncomingMessage, conversation_summary: str = "") -> O
                 + support_notice()
             ),
             buttons=[
-                {"label": "Эмоции и состояние", "value": "topic:emotions"},
-                {"label": "Цели и решения", "value": "topic:goals"},
-                {"label": "Отношения", "value": "topic:relationships"},
+                {"label": "Согласен, продолжить", "value": "согласен"},
+                {"label": "Начать без анкеты", "value": "пропустить диагностику"},
             ] + support_buttons(),
         )
     flow = handle_diagnostic_message(message.channel.value, message.external_user_id, text)

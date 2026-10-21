@@ -1,0 +1,136 @@
+openapi: 3.1.0
+info:
+  title: Yugatneo BOT Private Coaching API
+  version: 1.0.0
+  description: Owner-scoped API for a configured ChatGPT Action. Scores are subjective self-reports, not clinical assessments.
+servers:
+  - url: https://YOUR-PUBLIC-HTTPS-DOMAIN
+    description: Replace with the deployed API base URL
+security:
+  - ApiKeyAuth: []
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+  schemas:
+    ScoreInput:
+      type: object
+      required: [sphere, score]
+      properties:
+        sphere: { type: string, minLength: 1, maxLength: 80 }
+        score: { type: integer, minimum: 0, maximum: 10 }
+        note: { type: string, maxLength: 2000 }
+    SphereInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+    GoalInput:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 200 }
+        first_step: { type: string, maxLength: 2000 }
+        target_date: { type: string, format: date, nullable: true }
+    GoalStatus:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [planned, in_progress, done, paused] }
+    ChatInput:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string, minLength: 1, maxLength: 6000 }
+paths:
+  /api/v1/status:
+    get:
+      operationId: checkPrivateBotApi
+      summary: Check the private API connection
+      responses:
+        '200':
+          description: API is available
+  /api/v1/wheel:
+    get:
+      operationId: getWheelOfBalance
+      summary: Read life spheres and score history
+      responses:
+        '200':
+          description: Wheel scores
+  /api/v1/wheel/spheres:
+    post:
+      operationId: addLifeSphere
+      summary: Add a life sphere to the Wheel of Balance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SphereInput' }
+      responses:
+        '200':
+          description: Sphere added
+        '409':
+          description: Sphere already exists
+  /api/v1/wheel/scores:
+    post:
+      operationId: saveWheelScore
+      summary: Save a subjective score from 0 to 10
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ScoreInput' }
+      responses:
+        '200':
+          description: Score saved
+  /api/v1/goals:
+    get:
+      operationId: listCoachingGoals
+      summary: List goals
+      responses:
+        '200':
+          description: Goal list
+    post:
+      operationId: createCoachingGoal
+      summary: Create a goal with a first step and optional target date
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GoalInput' }
+      responses:
+        '200':
+          description: Goal created
+  /api/v1/goals/{goal_id}:
+    patch:
+      operationId: updateCoachingGoalStatus
+      summary: Change a goal's status
+      parameters:
+        - name: goal_id
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GoalStatus' }
+      responses:
+        '200':
+          description: Goal status updated
+        '404':
+          description: Goal not found
+  /api/v1/chat:
+    post:
+      operationId: sendReflectionMessage
+      summary: Send a message to the coaching dialogue engine
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ChatInput' }
+      responses:
+        '200':
+          description: Dialogue reply

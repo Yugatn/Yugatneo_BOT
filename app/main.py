@@ -9,6 +9,7 @@ from app.services.access_store import claim_question
 from app.services.catalog import get_question, load_questions
 from app.services.security import allow_request
 from app.services.human_gate import verify_turnstile_and_issue_code
+from app.services.diagnostic import DiagnosticProfile, prioritize_questions
 
 settings = get_settings()
 app = FastAPI(
@@ -23,6 +24,18 @@ class HumanVerificationRequest(BaseModel):
     ticket: str = Field(min_length=1, max_length=4096)
     signature: str = Field(min_length=1, max_length=256)
     turnstile_token: str = Field(min_length=1, max_length=4096)
+
+
+class DiagnosticRequest(BaseModel):
+    age: int = Field(ge=1, le=120)
+    gender: str | None = Field(default=None, max_length=80)
+    temperament: str = Field(default="unsure", max_length=32)
+    psychotype: str = Field(default="unsure", max_length=80)
+    goal: str = Field(default="general", max_length=32)
+    distress: int = Field(default=1, ge=0, le=4)
+    urgency: str = Field(default="normal", max_length=16)
+    style: str = Field(default="unsure", max_length=32)
+    limit: int = Field(default=12, ge=1, le=30)
 
 
 @app.middleware("http")
@@ -94,6 +107,29 @@ async def human_verify(body: HumanVerificationRequest, request: Request):
         "expires_in_seconds": 300,
         "next_step": "Send this code to the same bot account that opened the verification link.",
     }
+
+
+@app.post("/diagnostic/recommend")
+async def diagnostic_recommend(profile: DiagnosticRequest):
+    """Suggest an order for reflective questions. No profile is persisted by this endpoint."""
+    try:
+        result = prioritize_questions(
+            load_questions(),
+            DiagnosticProfile(
+                age=profile.age,
+                gender=profile.gender,
+                temperament=profile.temperament,
+                psychotype=profile.psychotype,
+                goal=profile.goal,
+                distress=profile.distress,
+                urgency=profile.urgency,
+                style=profile.style,
+            ),
+            limit=profile.limit,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return result
 
 
 @app.get("/dev/catalog")

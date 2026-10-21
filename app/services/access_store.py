@@ -38,7 +38,7 @@ def user_key(channel: str, external_user_id: str) -> str:
 
 
 def claim_question(channel: str, external_user_id: str, free_limit: int = 7) -> dict:
-    """Atomically reserve the next catalogue question or report paywall."""
+    """Record catalogue usage; every question remains accessible without payment."""
     key = user_key(channel, external_user_id)
     conn = _connect()
     try:

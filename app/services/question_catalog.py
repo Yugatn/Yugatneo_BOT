@@ -65,6 +65,8 @@ class QuestionCatalog:
         if data.get("count") != len(data["questions"]):
             raise ValueError("Catalog count does not match question rows")
         self.version = str(data.get("version", "unknown"))
+        self.by_risk = {level: sum(q.risk_level == level for q in questions)
+                        for level in ("standard", "reflective", "sensitive", "high", "restricted")}
         self.questions = tuple(questions)
 
     def categories(self) -> tuple[str, ...]:

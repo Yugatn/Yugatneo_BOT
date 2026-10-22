@@ -49,6 +49,9 @@ class QuestionCatalog:
             if qid in seen:
                 raise ValueError(f"Duplicate question ID: {qid}")
             seen.add(qid)
+            risk = raw.get("risk_level")
+            if risk not in {"standard", "sensitive", "high", "restricted"}:
+                raise ValueError(f"Unknown or missing risk level: {qid}")
             tags = raw.get("tags") or []
             if not isinstance(tags, list) or not all(isinstance(t, str) for t in tags):
                 raise ValueError(f"Invalid tags: {qid}")
@@ -56,7 +59,7 @@ class QuestionCatalog:
                 id=qid, category=category,
                 subcategory=str(raw.get("subcategory", "")),
                 text=phrase, purpose=str(raw.get("purpose", "")),
-                risk_level=str(raw.get("risk_level", "standard")),
+                risk_level=risk,
                 tags=tuple(tags),
             ))
         if data.get("count") != len(data["questions"]):

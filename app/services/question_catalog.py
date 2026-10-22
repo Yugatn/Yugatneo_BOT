@@ -50,7 +50,7 @@ class QuestionCatalog:
                 raise ValueError(f"Duplicate question ID: {qid}")
             seen.add(qid)
             risk = raw.get("risk_level")
-            if risk not in {"standard", "sensitive", "high", "restricted"}:
+            if risk not in {"standard", "reflective", "sensitive", "high", "restricted"}:
                 raise ValueError(f"Unknown or missing risk level: {qid}")
             tags = raw.get("tags") or []
             if not isinstance(tags, list) or not all(isinstance(t, str) for t in tags):

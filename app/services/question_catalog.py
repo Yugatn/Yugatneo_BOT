@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 DEFAULT_CATALOG = Path(__file__).resolve().parents[2] / "data" / "questions.ru.json"
+EXTENDED_CATALOG = DEFAULT_CATALOG.with_name("questions.extended.ru.json")
 
 
 @dataclass(frozen=True)
@@ -27,11 +28,17 @@ class CatalogQuestion:
 class QuestionCatalog:
     def __init__(self, path: Path = DEFAULT_CATALOG):
         data = json.loads(Path(path).read_text(encoding="utf-8"))
+        additional = []
+        if Path(path).resolve() == DEFAULT_CATALOG.resolve() and EXTENDED_CATALOG.exists():
+            extension = json.loads(EXTENDED_CATALOG.read_text(encoding="utf-8"))
+            additional = extension.get("questions", [])
+            if extension.get("count") != len(additional):
+                raise ValueError("Extended catalog count does not match question rows")
         if not isinstance(data, dict) or not isinstance(data.get("questions"), list):
             raise ValueError("Invalid question catalog")
         questions: list[CatalogQuestion] = []
         seen: set[str] = set()
-        for raw in data["questions"]:
+        for raw in data["questions"] + additional:
             if not isinstance(raw, dict):
                 raise ValueError("Invalid question row")
             qid = raw.get("id")
@@ -52,7 +59,7 @@ class QuestionCatalog:
                 risk_level=str(raw.get("risk_level", "standard")),
                 tags=tuple(tags),
             ))
-        if data.get("count") != len(questions):
+        if data.get("count") != len(data["questions"]):
             raise ValueError("Catalog count does not match question rows")
         self.version = str(data.get("version", "unknown"))
         self.questions = tuple(questions)

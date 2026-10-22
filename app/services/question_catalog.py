@@ -78,7 +78,8 @@ class QuestionCatalog:
         for q in self.questions:
             if q.category != category or q.id in prior:
                 continue
-            if not allow_sensitive and q.risk_level not in {"standard"}:
+            allowed = {"standard", "reflective"} if allow_sensitive else {"standard"}
+            if q.risk_level not in allowed:
                 continue
             return q
         return None

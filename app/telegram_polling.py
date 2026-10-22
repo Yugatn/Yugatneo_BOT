@@ -16,6 +16,7 @@ import httpx
 from app.core.config import get_settings
 from app.core.models import Channel, IncomingMessage
 from app.services.dialogue import respond
+from app.services.diagnostic_flow import handle_diagnostic_message
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -25,7 +26,8 @@ DB_PATH = ROOT / "yugatneo_bot.sqlite3"
 MENU = {
     "keyboard": [
         [{"text": "🧭 Колесо баланса"}, {"text": "📊 Мои оценки"}],
-        [{"text": "💬 Рефлексия"}, {"text": "❔ Помощь"}],
+        [{"text": "💬 Рефлексия"}, {"text": "🧩 Настроить вопросы"}],
+        [{"text": "❔ Помощь"}],
     ],
     "resize_keyboard": True,
 }
@@ -157,13 +159,37 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             await send(client, token, chat_id, "\n".join(lines), MENU)
         return
 
+    if text == "🧩 Настроить вопросы":
+        text = "/diagnostic"
+
+    if text.lower() in {"/diagnostic", "диагностика", "/diagnostic_reset",
+                        "/skip_diagnostic", "пропустить диагностику",
+                        "сбросить диагностику", "/question_order", "порядок вопросов"}:
+        try:
+            result = handle_diagnostic_message("telegram", user_id, text)
+            if result:
+                await send(client, token, chat_id, result["text"], MENU)
+                return
+        except Exception:
+            log.exception("Onboarding failed")
+            await send(client, token, chat_id, "Не получилось продолжить анкету. Можно пропустить её командой /skip_diagnostic.")
+            return
+
     if text == "💬 Рефлексия":
         set_state(user_id, "reflection")
         await send(client, token, chat_id, "С чего тебе хотелось бы начать? Что сейчас важнее всего понять или изменить? Можешь ответить свободно; /cancel — выход.", MENU)
         return
 
     mode, sphere = get_state(user_id)
-    if mode == "wheel_name":
+    if mode == "reflection":
+        try:
+            result = handle_diagnostic_message("telegram", user_id, text)
+            if result:
+                await send(client, token, chat_id, result["text"], MENU)
+                return
+        except Exception:
+            log.exception("Adaptive onboarding failed")
+        if mode == "wheel_name":
         sphere = re.sub(r"\s+", " ", text).strip()[:80]
         if not sphere:
             await send(client, token, chat_id, "Напиши название сферы или /cancel.")

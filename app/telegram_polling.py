@@ -17,7 +17,7 @@ from app.core.config import get_settings
 from app.core.models import Channel, IncomingMessage
 from app.services.dialogue import respond
 from app.services.question_catalog import QuestionCatalog
-from app.services.branching_dialogue import NODES, advance, options, question_context
+from app.services.branching_dialogue import NODES, advance, options
 from app.services.safety import classify_crisis_message, crisis_response
 from app.services.diagnostic_flow import handle_diagnostic_message
 
@@ -286,9 +286,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             await send(client, token, chat_id,
                        "Спасибо за ответ. Это вопрос для самостоятельного "
                        "осмысления, а не оценка личности. Можно перейти к "
-                       "свободной рефлексии через главное меню.\\n\\n"
-                       + "Подсказка для ИИ при развитии ветки: "
-                       + question_context(node_id), MENU)
+                       "свободной рефлексии через главное меню.", MENU)
             set_state(user_id, "menu")
         return
 

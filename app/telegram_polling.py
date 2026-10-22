@@ -73,7 +73,7 @@ def branch_catalog_suggestion(node_id: str, prefs: DialoguePreferences) -> str:
     if not topic_allowed(category, prefs):
         return ""
     q = CATALOG.select(category)
-    return ("\\n\\nВопрос из библиотеки для дальнейшей работы: "
+    return ("\n\nВопрос из библиотеки для дальнейшей работы: "
             + adapt_question(q.text, prefs)) if q else ""
 
 
@@ -84,9 +84,9 @@ def branch_keyboard(node_id: str) -> dict:
 
 def branch_prompt(node_id: str) -> str:
     return NODES[node_id].prompt + (
-        "\\n\\nВыбери ответ кнопкой, либо заверши сценарий через /cancel."
+        "\n\nВыбери ответ кнопкой, либо заверши сценарий через /cancel."
         if options(node_id) else
-        "\\n\\nМожно свободно обдумать вопрос. /cancel — выход. "
+        "\n\nМожно свободно обдумать вопрос. /cancel — выход. "
         "Для другого сценария выбери «🌿 Диалог по ответам»."
     )
 
@@ -123,7 +123,8 @@ def preference_keyboard() -> dict:
         [{"text": "Короткие вопросы"}, {"text": "Обычные вопросы"}],
         [{"text": "Обсудить хроническое состояние"}],
         [{"text": "Разрешить глубокую рефлексию"}],
-        [{"text": "Сбросить предпочтения"}, {"text": "↩️ Главное меню"}],
+        [{"text": "Сбросить предпочтения"}, {"text": "🗑 Удалить мои данные"}],
+        [{"text": "↩️ Главное меню"}],
     ], "resize_keyboard": True}
 
 
@@ -226,6 +227,25 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         await send(client, token, chat_id, crisis_response(crisis), MENU)
         return
 
+    if text in {"/delete_my_data", "🗑 Удалить мои данные"}:
+        with sqlite3.connect(DB_PATH) as conn:
+            for table in ("wheel_scores", "bot_state", "dialogue_preferences"):
+                conn.execute(f"DELETE FROM {table} WHERE telegram_user_id=?", (user_id,))
+        try:
+            from app.services.diagnostic_flow import clear_diagnostic
+            clear_diagnostic("telegram", user_id)
+        except Exception:
+            log.exception("Failed to clear diagnostic data")
+            await send(client, token, chat_id,
+                       "Часть данных не удалось удалить. Обратись к администратору.",
+                       MENU)
+            return
+        await send(client, token, chat_id,
+                   "Локальные оценки, предпочтения и настройки диагностики удалены. "
+                   "История сообщений в Telegram и возможные данные внешнего ИИ "
+                   "не удаляются этой командой.", MENU)
+        return
+
     if text.lower() in CANCEL_WORDS:
         set_state(user_id, "menu")
         await send(client, token, chat_id, "Остановил текущий сценарий. Выбирай, что делать дальше.", MENU)
@@ -244,7 +264,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         return
 
     if text == "❔ Помощь" or text == "/help":
-        await send(client, token, chat_id, "Команды: /start — меню; /questions — библиотека вопросов; /skip — пропустить вопрос; /cancel — остановить сценарий. Оценки колеса субъективны и не являются диагностикой.", MENU)
+        await send(client, token, chat_id, "Команды: /start — меню; /questions — библиотека вопросов; /skip — пропустить вопрос; /cancel — остановить сценарий; /delete_my_data — удалить локальные данные. Оценки колеса субъективны и не являются диагностикой.", MENU)
         return
 
     if text == "🧭 Колесо баланса":
@@ -305,7 +325,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
     if text == "⚙️ Удобство диалога" or text == "/preferences":
         set_state(user_id, "preferences")
         await send(client, token, chat_id, voluntary_intro()
-                   + "\\n\\nВыбери только те настройки, которые хочешь сообщить. "
+                   + "\n\nВыбери только те настройки, которые хочешь сообщить. "
                    "Они меняют подбор тем, но не являются оценкой личности.",
                    preference_keyboard())
         return

@@ -17,6 +17,7 @@ from app.core.config import get_settings
 from app.core.models import Channel, IncomingMessage
 from app.services.dialogue import respond
 from app.services.question_catalog import QuestionCatalog
+from app.services.branching_dialogue import NODES, advance, options, question_context
 from app.services.safety import classify_crisis_message, crisis_response
 from app.services.diagnostic_flow import handle_diagnostic_message
 
@@ -29,6 +30,7 @@ MENU = {
     "keyboard": [
         [{"text": "🧭 Колесо баланса"}, {"text": "📊 Мои оценки"}],
         [{"text": "💬 Рефлексия"}, {"text": "📚 Вопросы"}],
+        [{"text": "🌿 Диалог по ответам"}],
         [{"text": "🧩 Настроить вопросы"}],
         [{"text": "❔ Помощь"}],
     ],
@@ -55,6 +57,20 @@ def question_keyboard() -> dict:
         "resize_keyboard": True,
     }
 
+
+
+def branch_keyboard(node_id: str) -> dict:
+    return {"keyboard": [[{"text": label}] for label in options(node_id)]
+            + [[{"text": "↩️ Главное меню"}]], "resize_keyboard": True}
+
+
+def branch_prompt(node_id: str) -> str:
+    return NODES[node_id].prompt + (
+        "\\n\\nВыбери ответ кнопкой, либо заверши сценарий через /cancel."
+        if options(node_id) else
+        "\\n\\nМожно свободно обдумать вопрос. /cancel — выход. "
+        "Для другого сценария выбери «🌿 Диалог по ответам»."
+    )
 
 
 def init_db() -> None:
@@ -159,7 +175,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             "Привет! Я Yugatn Neo Symbiot — помощник для коучинга, самоисследования и психообразования.\n\n"
             "Можно пропустить любой вопрос или остановиться. Я не ставлю диагнозы и не заменяю специалиста. "
             "Не отправляй пароли и данные, которые не хочешь передавать сервису.\n\n"
-            "Выбери «Колесо баланса» для субъективной оценки сфер жизни от 0 до 10 или «Рефлексия» для диалога. «Вопросы» работают без ИИ.",
+            "Выбери «Колесо баланса» для субъективной оценки сфер жизни от 0 до 10 или «Рефлексия» для диалога. «Вопросы» и «Диалог по ответам» работают без ИИ.",
             MENU,
         )
         return
@@ -217,6 +233,12 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         await send(client, token, chat_id, "Главное меню.", MENU)
         return
 
+    if text in {"🌿 Диалог по ответам", "/branch"}:
+        set_state(user_id, "branch:start")
+        await send(client, token, chat_id, branch_prompt("start"),
+                   branch_keyboard("start"))
+        return
+
     if text == "📚 Вопросы" or text == "/questions":
         set_state(user_id, "question_category")
         await send(
@@ -243,6 +265,32 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         if mode == "diagnostic":
             await send(client, token, chat_id, "Не удалось обработать ответ. Напиши /skip_diagnostic для выхода.")
             return
+
+    if mode.startswith("branch:"):
+        node_id = mode.split(":", 1)[1]
+        if node_id not in NODES:
+            set_state(user_id, "menu")
+            await send(client, token, chat_id, "Сценарий устарел. Начни заново.", MENU)
+            return
+        next_id = advance(node_id, text)
+        if next_id is not None:
+            set_state(user_id, "branch:" + next_id)
+            await send(client, token, chat_id, branch_prompt(next_id),
+                       branch_keyboard(next_id) if options(next_id) else MENU)
+        elif options(node_id):
+            await send(client, token, chat_id,
+                       "Выбери вариант кнопкой. Если ни один не подходит, "
+                       "можно выйти и воспользоваться свободной рефлексией.",
+                       branch_keyboard(node_id))
+        else:
+            await send(client, token, chat_id,
+                       "Спасибо за ответ. Это вопрос для самостоятельного "
+                       "осмысления, а не оценка личности. Можно перейти к "
+                       "свободной рефлексии через главное меню.\\n\\n"
+                       + "Подсказка для ИИ при развитии ветки: "
+                       + question_context(node_id), MENU)
+            set_state(user_id, "menu")
+        return
 
     if mode == "question_category":
         categories = available_question_categories()

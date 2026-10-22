@@ -397,8 +397,6 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
                        "Спасибо за ответ. Это вопрос для самостоятельного "
                        "осмысления, а не оценка личности. Можно перейти к "
                        "свободной рефлексии через главное меню.", terminal_keyboard())
-            return
-            set_state(user_id, "branch:" + node_id)
         return
 
     if mode == "preferences":

@@ -168,6 +168,8 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         try:
             result = handle_diagnostic_message("telegram", user_id, text)
             if result:
+                status = result.get("metadata", {}).get("diagnostic")
+                set_state(user_id, "diagnostic" if status in {"started", "in_progress", "awaiting_valid_answer"} else "menu")
                 await send(client, token, chat_id, result["text"], MENU)
                 return
         except Exception:
@@ -181,14 +183,20 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         return
 
     mode, sphere = get_state(user_id)
-    if mode == "reflection":
+    if mode in {"reflection", "diagnostic"}:
         try:
             result = handle_diagnostic_message("telegram", user_id, text)
             if result:
+                status = result.get("metadata", {}).get("diagnostic")
+                if mode == "diagnostic":
+                    set_state(user_id, "diagnostic" if status in {"started", "in_progress", "awaiting_valid_answer"} else "reflection")
                 await send(client, token, chat_id, result["text"], MENU)
                 return
         except Exception:
             log.exception("Adaptive onboarding failed")
+        if mode == "diagnostic":
+            await send(client, token, chat_id, "Не удалось обработать ответ. Напиши /skip_diagnostic для выхода.")
+            return
 
     if mode == "wheel_name":
         sphere = re.sub(r"\s+", " ", text).strip()[:80]

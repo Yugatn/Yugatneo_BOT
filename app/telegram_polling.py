@@ -17,7 +17,7 @@ from app.core.config import get_settings
 from app.core.models import Channel, IncomingMessage
 from app.services.dialogue import respond
 from app.services.question_catalog import QuestionCatalog
-from app.services.branching_dialogue import NODES, advance, options
+from app.services.branching_dialogue import NODES, advance, options, question_context
 from app.services.question_adaptation import DialoguePreferences, topic_allowed, adapt_question, voluntary_intro
 from app.services.safety import classify_crisis_message, crisis_response
 from app.services.diagnostic_flow import handle_diagnostic_message
@@ -59,6 +59,22 @@ def question_keyboard(prefs: DialoguePreferences | None = None) -> dict:
         "resize_keyboard": True,
     }
 
+
+
+def terminal_keyboard() -> dict:
+    return {"keyboard": [
+        [{"text": "🤖 Продолжить с ИИ"}],
+        [{"text": "📚 Вопросы"}, {"text": "↩️ Главное меню"}],
+    ], "resize_keyboard": True}
+
+
+def branch_catalog_suggestion(node_id: str, prefs: DialoguePreferences) -> str:
+    category = NODES[node_id].followup
+    if not topic_allowed(category, prefs):
+        return ""
+    q = CATALOG.select(category)
+    return ("\\n\\nВопрос из библиотеки для дальнейшей работы: "
+            + adapt_question(q.text, prefs)) if q else ""
 
 
 def branch_keyboard(node_id: str) -> dict:
@@ -321,6 +337,43 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             await send(client, token, chat_id, "Не удалось обработать ответ. Напиши /skip_diagnostic для выхода.")
             return
 
+    if text == "🤖 Продолжить с ИИ":
+        if mode.startswith("branch:"):
+            node_id = mode.split(":", 1)[1]
+            if node_id in NODES and not options(node_id):
+                if read_prefs(user_id).age_group == "under_18":
+                    await send(client, token, chat_id,
+                               "Для несовершеннолетних переход к ИИ из этого сценария "
+                               "пока отключён. Можно пользоваться бесплатными вопросами.",
+                               terminal_keyboard())
+                    return
+                set_state(user_id, "ai_branch", node_id)
+                await send(client, token, chat_id,
+                           "Ты выбрал продолжение с ИИ. Следующее сообщение будет "
+                           "отправлено подключённому ИИ-провайдеру, если он настроен. "
+                           "Передаётся текст твоего сообщения и краткая тема ветки. "
+                           "Не отправляй медицинские документы и другие чувствительные данные. "
+                           "Для отказа — /cancel. Напиши, что хочешь обсудить.", MENU)
+                return
+        await send(client, token, chat_id,
+                   "Сначала выбери тему через «🌿 Диалог по ответам».", MENU)
+        return
+
+    if mode == "ai_branch":
+        node_id = sphere or ""
+        incoming = IncomingMessage(
+            channel=Channel.TELEGRAM, external_user_id=user_id,
+            text=text, message_id=str(message.get("message_id", "")) or None)
+        try:
+            reply = await respond(incoming, conversation_summary=(
+                question_context(node_id) if node_id in NODES else ""))
+            await send(client, token, chat_id, reply.text, MENU)
+        except Exception:
+            log.exception("AI handoff unavailable")
+            await send(client, token, chat_id,
+                       "ИИ сейчас недоступен. Бесплатные вопросы продолжают работать.", MENU)
+        return
+
     if mode.startswith("branch:"):
         node_id = mode.split(":", 1)[1]
         if node_id not in NODES:
@@ -330,8 +383,10 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         next_id = advance(node_id, text)
         if next_id is not None:
             set_state(user_id, "branch:" + next_id)
-            await send(client, token, chat_id, branch_prompt(next_id),
-                       branch_keyboard(next_id) if options(next_id) else MENU)
+            await send(client, token, chat_id,
+                       branch_prompt(next_id) + (branch_catalog_suggestion(next_id, read_prefs(user_id))
+                       if not options(next_id) else ""),
+                       branch_keyboard(next_id) if options(next_id) else terminal_keyboard())
         elif options(node_id):
             await send(client, token, chat_id,
                        "Выбери вариант кнопкой. Если ни один не подходит, "
@@ -341,8 +396,9 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             await send(client, token, chat_id,
                        "Спасибо за ответ. Это вопрос для самостоятельного "
                        "осмысления, а не оценка личности. Можно перейти к "
-                       "свободной рефлексии через главное меню.", MENU)
-            set_state(user_id, "menu")
+                       "свободной рефлексии через главное меню.", terminal_keyboard())
+            return
+            set_state(user_id, "branch:" + node_id)
         return
 
     if mode == "preferences":

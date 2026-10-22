@@ -28,13 +28,33 @@ DB_PATH = ROOT / "yugatneo_bot.sqlite3"
 MENU = {
     "keyboard": [
         [{"text": "🧭 Колесо баланса"}, {"text": "📊 Мои оценки"}],
-        [{"text": "💬 Рефлексия"}, {"text": "🧩 Настроить вопросы"}],
+        [{"text": "💬 Рефлексия"}, {"text": "📚 Вопросы"}],
+        [{"text": "🧩 Настроить вопросы"}],
         [{"text": "❔ Помощь"}],
     ],
     "resize_keyboard": True,
 }
 CATALOG = QuestionCatalog()
 CANCEL_WORDS = {"/cancel", "отмена", "стоп", "назад"}
+
+
+def available_question_categories() -> dict[str, str]:
+    """Russian display label -> stable category ID, only for safe offline topics."""
+    return {
+        next(q.subcategory for q in CATALOG.questions if q.category == category): category
+        for category in CATALOG.categories()
+        if any(q.category == category and q.risk_level == "standard" for q in CATALOG.questions)
+    }
+
+
+def question_keyboard() -> dict:
+    labels = list(available_question_categories())
+    return {
+        "keyboard": [[{"text": label}] for label in labels]
+                    + [[{"text": "↩️ Главное меню"}]],
+        "resize_keyboard": True,
+    }
+
 
 
 def init_db() -> None:
@@ -139,13 +159,13 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             "Привет! Я Yugatn Neo Symbiot — помощник для коучинга, самоисследования и психообразования.\n\n"
             "Можно пропустить любой вопрос или остановиться. Я не ставлю диагнозы и не заменяю специалиста. "
             "Не отправляй пароли и данные, которые не хочешь передавать сервису.\n\n"
-            "Выбери «Колесо баланса» для субъективной оценки сфер жизни от 0 до 10 или «Рефлексия» для диалога.",
+            "Выбери «Колесо баланса» для субъективной оценки сфер жизни от 0 до 10 или «Рефлексия» для диалога. «Вопросы» работают без ИИ.",
             MENU,
         )
         return
 
     if text == "❔ Помощь" or text == "/help":
-        await send(client, token, chat_id, "Команды: /start — меню; /cancel — остановить текущий сценарий. Оценки колеса субъективны и не являются диагностикой.", MENU)
+        await send(client, token, chat_id, "Команды: /start — меню; /questions — библиотека вопросов; /skip — пропустить вопрос; /cancel — остановить сценарий. Оценки колеса субъективны и не являются диагностикой.", MENU)
         return
 
     if text == "🧭 Колесо баланса":
@@ -192,12 +212,20 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         await send(client, token, chat_id, "С чего тебе хотелось бы начать? Что сейчас важнее всего понять или изменить? Можешь ответить свободно; /cancel — выход.", MENU)
         return
 
+    if text == "↩️ Главное меню":
+        set_state(user_id, "menu")
+        await send(client, token, chat_id, "Главное меню.", MENU)
+        return
+
     if text == "📚 Вопросы" or text == "/questions":
         set_state(user_id, "question_category")
-        sample = ", ".join(CATALOG.categories()[:12])
-        await send(client, token, chat_id,
-                   "Библиотека вопросов доступна без ИИ. Напиши категорию из списка:\\n"
-                   + sample + "\\n\\nПропуск вопроса: /skip. Завершить: /cancel.")
+        await send(
+            client, token, chat_id,
+            "Выбери тему кнопкой ниже. Эти вопросы работают без подключения к ИИ.\n\n"
+            "Можно пропустить любой вопрос: /skip. Завершить: /cancel.\n"
+            "Для чувствительных тем автоматический сценарий пока отключён.",
+            question_keyboard(),
+        )
         return
 
     mode, sphere = get_state(user_id)
@@ -217,24 +245,21 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             return
 
     if mode == "question_category":
-        choice = text.strip().lower()
-        categories = {c.lower(): c for c in CATALOG.categories()}
-        if choice not in categories:
+        categories = available_question_categories()
+        category = categories.get(text)
+        if category is None:
             await send(client, token, chat_id,
-                       "Не нашёл категорию. Попробуй ещё раз или /cancel.")
+                       "Выбери тему с помощью кнопок или отправь /cancel.",
+                       question_keyboard())
             return
-        category = categories[choice]
         eligible = [q for q in CATALOG.questions
                     if q.category == category and q.risk_level == "standard"]
-        if not eligible:
-            await send(client, token, chat_id,
-                       "Для этой темы пока нет вопросов для автономного режима. "
-                       "Выбери другую категорию или /cancel.")
-            return
         set_state(user_id, "questions:0", category)
-        await send(client, token, chat_id, "Вопрос 1/" + str(len(eligible))
-                   + "\\n\\n" + eligible[0].text
-                   + "\\n\\nОтвет не сохраняется. /skip — следующий, /cancel — завершить.")
+        await send(client, token, chat_id,
+                   f"Вопрос 1/{len(eligible)}\n\n{eligible[0].text}\n\n"
+                   "Ответ не сохраняется. /skip — следующий, /cancel — завершить.",
+                   {"keyboard": [[{"text": "/skip"}, {"text": "/cancel"}]],
+                    "resize_keyboard": True})
         return
 
     if mode.startswith("questions:"):
@@ -253,9 +278,9 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         else:
             set_state(user_id, f"questions:{index}", category)
             await send(client, token, chat_id,
-                       f"Вопрос {index + 1}/{len(eligible)}\\n\\n"
+                       f"Вопрос {index + 1}/{len(eligible)}\n\n"
                        + eligible[index].text
-                       + "\\n\\nОтвет не сохраняется. /skip — следующий, /cancel — завершить.")
+                       + "\n\nОтвет не сохраняется. /skip — следующий, /cancel — завершить.")
         return
 
     if mode == "wheel_name":

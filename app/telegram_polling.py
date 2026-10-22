@@ -189,7 +189,8 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
                 return
         except Exception:
             log.exception("Adaptive onboarding failed")
-        if mode == "wheel_name":
+
+    if mode == "wheel_name":
         sphere = re.sub(r"\s+", " ", text).strip()[:80]
         if not sphere:
             await send(client, token, chat_id, "Напиши название сферы или /cancel.")

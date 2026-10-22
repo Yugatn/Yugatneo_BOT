@@ -8,8 +8,8 @@ from app.services.question_catalog import QuestionCatalog
 
 def test_builtin_catalog_is_valid():
     catalog = QuestionCatalog()
-    assert len(catalog.questions) == 310
-    assert len(catalog.categories()) == 31
+    assert len(catalog.questions) == 430
+    assert len(catalog.categories()) == 43
     assert len({q.id for q in catalog.questions}) == len(catalog.questions)
 
 

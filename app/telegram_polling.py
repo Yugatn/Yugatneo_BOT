@@ -18,6 +18,7 @@ from app.core.models import Channel, IncomingMessage
 from app.services.dialogue import respond
 from app.services.question_catalog import QuestionCatalog
 from app.services.branching_dialogue import NODES, advance, options
+from app.services.question_adaptation import DialoguePreferences, topic_allowed, adapt_question, voluntary_intro
 from app.services.safety import classify_crisis_message, crisis_response
 from app.services.diagnostic_flow import handle_diagnostic_message
 
@@ -31,7 +32,7 @@ MENU = {
         [{"text": "🧭 Колесо баланса"}, {"text": "📊 Мои оценки"}],
         [{"text": "💬 Рефлексия"}, {"text": "📚 Вопросы"}],
         [{"text": "🌿 Диалог по ответам"}],
-        [{"text": "🧩 Настроить вопросы"}],
+        [{"text": "🧩 Настроить вопросы"}, {"text": "⚙️ Удобство диалога"}],
         [{"text": "❔ Помощь"}],
     ],
     "resize_keyboard": True,
@@ -40,17 +41,18 @@ CATALOG = QuestionCatalog()
 CANCEL_WORDS = {"/cancel", "отмена", "стоп", "назад"}
 
 
-def available_question_categories() -> dict[str, str]:
+def available_question_categories(prefs: DialoguePreferences | None = None) -> dict[str, str]:
     """Russian display label -> stable category ID, only for safe offline topics."""
+    prefs = prefs or DialoguePreferences()
     return {
         next(q.subcategory for q in CATALOG.questions if q.category == category): category
         for category in CATALOG.categories()
-        if any(q.category == category and q.risk_level == "standard" for q in CATALOG.questions)
+        if topic_allowed(category, prefs) and any(q.category == category and q.risk_level == "standard" for q in CATALOG.questions)
     }
 
 
-def question_keyboard() -> dict:
-    labels = list(available_question_categories())
+def question_keyboard(prefs: DialoguePreferences | None = None) -> dict:
+    labels = list(available_question_categories(prefs))
     return {
         "keyboard": [[{"text": label}] for label in labels]
                     + [[{"text": "↩️ Главное меню"}]],
@@ -73,6 +75,42 @@ def branch_prompt(node_id: str) -> str:
     )
 
 
+def read_prefs(user_id: str) -> DialoguePreferences:
+    with sqlite3.connect(DB_PATH) as conn:
+        row = conn.execute(
+            "SELECT age_group, format, chronic_health_topic, sensitive_opt_in "
+            "FROM dialogue_preferences WHERE telegram_user_id=?", (user_id,)
+        ).fetchone()
+    if row is None:
+        return DialoguePreferences()
+    return DialoguePreferences(age_group=row[0], format=row[1],
+                               chronic_health_topic=bool(row[2]),
+                               sensitive_opt_in=bool(row[3]))
+
+
+def save_prefs(user_id: str, prefs: DialoguePreferences) -> None:
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute(
+            "INSERT INTO dialogue_preferences VALUES (?, ?, ?, ?, ?) "
+            "ON CONFLICT(telegram_user_id) DO UPDATE SET "
+            "age_group=excluded.age_group, format=excluded.format, "
+            "chronic_health_topic=excluded.chronic_health_topic, "
+            "sensitive_opt_in=excluded.sensitive_opt_in",
+            (user_id, prefs.age_group, prefs.format, int(prefs.chronic_health_topic),
+             int(prefs.sensitive_opt_in))
+        )
+
+
+def preference_keyboard() -> dict:
+    return {"keyboard": [
+        [{"text": "Взрослый"}, {"text": "Подросток"}, {"text": "Старший возраст"}],
+        [{"text": "Короткие вопросы"}, {"text": "Обычные вопросы"}],
+        [{"text": "Обсудить хроническое состояние"}],
+        [{"text": "Разрешить глубокую рефлексию"}],
+        [{"text": "Сбросить предпочтения"}, {"text": "↩️ Главное меню"}],
+    ], "resize_keyboard": True}
+
+
 def init_db() -> None:
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute("""
@@ -82,6 +120,15 @@ def init_db() -> None:
                 score INTEGER NOT NULL CHECK(score BETWEEN 0 AND 10),
                 updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (telegram_user_id, sphere)
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS dialogue_preferences (
+                telegram_user_id TEXT PRIMARY KEY,
+                age_group TEXT NOT NULL DEFAULT 'unknown',
+                format TEXT NOT NULL DEFAULT 'standard',
+                chronic_health_topic INTEGER NOT NULL DEFAULT 0,
+                sensitive_opt_in INTEGER NOT NULL DEFAULT 0
             )
         """)
         conn.execute("""
@@ -239,6 +286,14 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
                    branch_keyboard("start"))
         return
 
+    if text == "⚙️ Удобство диалога" or text == "/preferences":
+        set_state(user_id, "preferences")
+        await send(client, token, chat_id, voluntary_intro()
+                   + "\\n\\nВыбери только те настройки, которые хочешь сообщить. "
+                   "Они меняют подбор тем, но не являются оценкой личности.",
+                   preference_keyboard())
+        return
+
     if text == "📚 Вопросы" or text == "/questions":
         set_state(user_id, "question_category")
         await send(
@@ -246,7 +301,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             "Выбери тему кнопкой ниже. Эти вопросы работают без подключения к ИИ.\n\n"
             "Можно пропустить любой вопрос: /skip. Завершить: /cancel.\n"
             "Для чувствительных тем автоматический сценарий пока отключён.",
-            question_keyboard(),
+            question_keyboard(read_prefs(user_id)),
         )
         return
 
@@ -290,19 +345,47 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             set_state(user_id, "menu")
         return
 
+    if mode == "preferences":
+        prefs = read_prefs(user_id)
+        from dataclasses import replace
+        if text in {"Взрослый", "Подросток", "Старший возраст"}:
+            prefs = replace(prefs, age_group={
+                "Взрослый": "adult", "Подросток": "under_18",
+                "Старший возраст": "older_adult"}[text])
+        elif text in {"Короткие вопросы", "Обычные вопросы"}:
+            prefs = replace(prefs, format="short" if text == "Короткие вопросы" else "standard")
+        elif text == "Обсудить хроническое состояние":
+            prefs = replace(prefs, chronic_health_topic=not prefs.chronic_health_topic)
+        elif text == "Разрешить глубокую рефлексию":
+            prefs = replace(prefs, sensitive_opt_in=not prefs.sensitive_opt_in)
+        elif text == "Сбросить предпочтения":
+            prefs = DialoguePreferences()
+        else:
+            await send(client, token, chat_id, "Выбери настройку кнопкой.",
+                       preference_keyboard())
+            return
+        if prefs.age_group == "under_18":
+            prefs = replace(prefs, sensitive_opt_in=False)
+        save_prefs(user_id, prefs)
+        await send(client, token, chat_id,
+                   "Предпочтения обновлены. Можно менять их в любой момент. "
+                   "Бот не сохраняет диагнозы и подробные истории заболеваний.",
+                   preference_keyboard())
+        return
+
     if mode == "question_category":
-        categories = available_question_categories()
+        categories = available_question_categories(read_prefs(user_id))
         category = categories.get(text)
         if category is None:
             await send(client, token, chat_id,
                        "Выбери тему с помощью кнопок или отправь /cancel.",
-                       question_keyboard())
+                       question_keyboard(read_prefs(user_id)))
             return
         eligible = [q for q in CATALOG.questions
                     if q.category == category and q.risk_level == "standard"]
         set_state(user_id, "questions:0", category)
         await send(client, token, chat_id,
-                   f"Вопрос 1/{len(eligible)}\n\n{eligible[0].text}\n\n"
+                   f"Вопрос 1/{len(eligible)}\n\n{adapt_question(eligible[0].text, read_prefs(user_id))}\n\n"
                    "Ответ не сохраняется. /skip — следующий, /cancel — завершить.",
                    {"keyboard": [[{"text": "/skip"}, {"text": "/cancel"}]],
                     "resize_keyboard": True})
@@ -325,7 +408,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             set_state(user_id, f"questions:{index}", category)
             await send(client, token, chat_id,
                        f"Вопрос {index + 1}/{len(eligible)}\n\n"
-                       + eligible[index].text
+                       + adapt_question(eligible[index].text, read_prefs(user_id))
                        + "\n\nОтвет не сохраняется. /skip — следующий, /cancel — завершить.")
         return
 

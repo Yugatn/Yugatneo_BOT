@@ -1,0 +1,154 @@
+{
+  "version": 1,
+  "start": "start",
+  "nodes": [
+    {
+      "id": "start",
+      "prompt": "Что сейчас хочется исследовать?",
+      "choices": [
+        [
+          "Эмоции и состояние",
+          "emotion"
+        ],
+        [
+          "Цель и действие",
+          "goal"
+        ],
+        [
+          "Отношения",
+          "relationship"
+        ],
+        [
+          "Пока не знаю",
+          "unclear"
+        ]
+      ]
+    },
+    {
+      "id": "emotion",
+      "prompt": "Что ближе к твоему состоянию?",
+      "choices": [
+        [
+          "Тревога",
+          "anxiety"
+        ],
+        [
+          "Усталость",
+          "fatigue"
+        ],
+        [
+          "Раздражение",
+          "anger"
+        ],
+        [
+          "Другое / не уверен",
+          "unclear"
+        ]
+      ]
+    },
+    {
+      "id": "goal",
+      "prompt": "Что сейчас мешает двигаться к цели?",
+      "choices": [
+        [
+          "Неясно, чего хочу",
+          "values"
+        ],
+        [
+          "Трудно начать",
+          "first_step"
+        ],
+        [
+          "Не хватает ресурсов",
+          "resources"
+        ],
+        [
+          "Другое",
+          "unclear"
+        ]
+      ]
+    },
+    {
+      "id": "relationship",
+      "prompt": "Что сейчас важнее в отношениях?",
+      "choices": [
+        [
+          "Непонимание",
+          "communication"
+        ],
+        [
+          "Личные границы",
+          "boundaries"
+        ],
+        [
+          "Конфликт",
+          "conflict"
+        ],
+        [
+          "Другое",
+          "unclear"
+        ]
+      ]
+    },
+    {
+      "id": "anxiety",
+      "prompt": "Что именно кажется неопределённым? Что известно наверняка, а что ты предполагаешь?",
+      "choices": [],
+      "followup": "anxiety"
+    },
+    {
+      "id": "fatigue",
+      "prompt": "Что сейчас больше всего истощает тебя и какой небольшой отдых доступен?",
+      "choices": [],
+      "followup": "stress"
+    },
+    {
+      "id": "anger",
+      "prompt": "Какая важная потребность или граница могла оказаться затронута?",
+      "choices": [],
+      "followup": "emotions"
+    },
+    {
+      "id": "values",
+      "prompt": "Какой результат был бы для тебя по-настоящему значимым?",
+      "choices": [],
+      "followup": "values"
+    },
+    {
+      "id": "first_step",
+      "prompt": "Какой самый маленький безопасный шаг можно сделать сегодня?",
+      "choices": [],
+      "followup": "goals"
+    },
+    {
+      "id": "resources",
+      "prompt": "Какая поддержка или ресурс уже доступны тебе?",
+      "choices": [],
+      "followup": "resources"
+    },
+    {
+      "id": "communication",
+      "prompt": "Что бы ты хотел, чтобы другой человек понял о твоём опыте?",
+      "choices": [],
+      "followup": "relationships"
+    },
+    {
+      "id": "boundaries",
+      "prompt": "Какую границу ты хотел бы обозначить спокойно и ясно?",
+      "choices": [],
+      "followup": "boundaries"
+    },
+    {
+      "id": "conflict",
+      "prompt": "Какой результат разговора был бы приемлем для обеих сторон?",
+      "choices": [],
+      "followup": "conflict"
+    },
+    {
+      "id": "unclear",
+      "prompt": "Что сейчас привлекает твоё внимание сильнее всего?",
+      "choices": [],
+      "followup": "situation"
+    }
+  ]
+}

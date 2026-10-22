@@ -1,0 +1,1807 @@
+{
+  "version": "1.0",
+  "language": "ru",
+  "count": 120,
+  "questions": [
+    {
+      "id": "ext-cbt-01",
+      "category": "cbt",
+      "subcategory": "КПТ: мысли и убеждения",
+      "text": "Какую автоматическую мысль ты заметил в этой ситуации?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "cbt"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "cbt"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-cbt-02",
+      "category": "cbt",
+      "subcategory": "КПТ: мысли и убеждения",
+      "text": "Какие факты подтверждают эту мысль?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "cbt"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "cbt"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-cbt-03",
+      "category": "cbt",
+      "subcategory": "КПТ: мысли и убеждения",
+      "text": "Какие факты не согласуются с этой мыслью?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "cbt"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "cbt"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-cbt-04",
+      "category": "cbt",
+      "subcategory": "КПТ: мысли и убеждения",
+      "text": "Какая альтернативная трактовка событий возможна?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "cbt"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "cbt"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-cbt-05",
+      "category": "cbt",
+      "subcategory": "КПТ: мысли и убеждения",
+      "text": "Что бы ты сказал другу с похожей мыслью?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "cbt"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "cbt"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-cbt-06",
+      "category": "cbt",
+      "subcategory": "КПТ: мысли и убеждения",
+      "text": "Насколько ты веришь этой мысли от 0 до 100 процентов?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "cbt"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "cbt"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-cbt-07",
+      "category": "cbt",
+      "subcategory": "КПТ: мысли и убеждения",
+      "text": "Как эта мысль влияет на поведение?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "cbt"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "cbt"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-cbt-08",
+      "category": "cbt",
+      "subcategory": "КПТ: мысли и убеждения",
+      "text": "Какое небольшое действие поможет проверить предположение?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "cbt"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "cbt"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-cbt-09",
+      "category": "cbt",
+      "subcategory": "КПТ: мысли и убеждения",
+      "text": "Какой результат мог бы опровергнуть первоначальный прогноз?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "cbt"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "cbt"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-cbt-10",
+      "category": "cbt",
+      "subcategory": "КПТ: мысли и убеждения",
+      "text": "Что изменилось в эмоциях после пересмотра мысли?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "cbt"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "cbt"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-cbt-behavior-01",
+      "category": "cbt-behavior",
+      "subcategory": "КПТ: поведение и эксперименты",
+      "text": "Какое действие ты откладываешь?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "cbt-behavior"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "cbt-behavior"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-cbt-behavior-02",
+      "category": "cbt-behavior",
+      "subcategory": "КПТ: поведение и эксперименты",
+      "text": "Какой первый шаг займёт меньше пяти минут?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "cbt-behavior"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "cbt-behavior"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-cbt-behavior-03",
+      "category": "cbt-behavior",
+      "subcategory": "КПТ: поведение и эксперименты",
+      "text": "Что ты прогнозируешь, если попробуешь?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "cbt-behavior"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "cbt-behavior"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-cbt-behavior-04",
+      "category": "cbt-behavior",
+      "subcategory": "КПТ: поведение и эксперименты",
+      "text": "Что поможет сделать эксперимент безопасным?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "cbt-behavior"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "cbt-behavior"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-cbt-behavior-05",
+      "category": "cbt-behavior",
+      "subcategory": "КПТ: поведение и эксперименты",
+      "text": "Как можно измерить результат без самокритики?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "cbt-behavior"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "cbt-behavior"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-cbt-behavior-06",
+      "category": "cbt-behavior",
+      "subcategory": "КПТ: поведение и эксперименты",
+      "text": "Какая альтернатива избеганию тебе доступна?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "cbt-behavior"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "cbt-behavior"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-cbt-behavior-07",
+      "category": "cbt-behavior",
+      "subcategory": "КПТ: поведение и эксперименты",
+      "text": "Что поддерживает текущую привычку?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "cbt-behavior"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "cbt-behavior"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-cbt-behavior-08",
+      "category": "cbt-behavior",
+      "subcategory": "КПТ: поведение и эксперименты",
+      "text": "Что происходит непосредственно перед привычной реакцией?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "cbt-behavior"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "cbt-behavior"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-cbt-behavior-09",
+      "category": "cbt-behavior",
+      "subcategory": "КПТ: поведение и эксперименты",
+      "text": "Как можно вознаградить себя без вреда?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "cbt-behavior"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "cbt-behavior"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-cbt-behavior-10",
+      "category": "cbt-behavior",
+      "subcategory": "КПТ: поведение и эксперименты",
+      "text": "Как пересмотреть план после неудачной попытки?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "cbt-behavior"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "cbt-behavior"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-gestalt-01",
+      "category": "gestalt",
+      "subcategory": "Гештальт: контакт и осознавание",
+      "text": "Что ты ощущаешь прямо сейчас?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "gestalt"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "gestalt"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-gestalt-02",
+      "category": "gestalt",
+      "subcategory": "Гештальт: контакт и осознавание",
+      "text": "На что направлено твоё внимание в этой беседе?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "gestalt"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "gestalt"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-gestalt-03",
+      "category": "gestalt",
+      "subcategory": "Гештальт: контакт и осознавание",
+      "text": "Какая потребность сейчас выходит на первый план?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "gestalt"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "gestalt"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-gestalt-04",
+      "category": "gestalt",
+      "subcategory": "Гештальт: контакт и осознавание",
+      "text": "Чего ты хочешь от другого человека?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "gestalt"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "gestalt"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-gestalt-05",
+      "category": "gestalt",
+      "subcategory": "Гештальт: контакт и осознавание",
+      "text": "Что мешает прямо сказать об этой потребности?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "gestalt"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "gestalt"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-gestalt-06",
+      "category": "gestalt",
+      "subcategory": "Гештальт: контакт и осознавание",
+      "text": "В какой момент контакт становится трудным?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "gestalt"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "gestalt"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-gestalt-07",
+      "category": "gestalt",
+      "subcategory": "Гештальт: контакт и осознавание",
+      "text": "Где ты замечаешь желание отступить от разговора?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "gestalt"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "gestalt"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-gestalt-08",
+      "category": "gestalt",
+      "subcategory": "Гештальт: контакт и осознавание",
+      "text": "Как ты различаешь свой выбор и ожидания других?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "gestalt"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "gestalt"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-gestalt-09",
+      "category": "gestalt",
+      "subcategory": "Гештальт: контакт и осознавание",
+      "text": "Каким было бы завершение незаконченного разговора, если не нужно действовать прямо сейчас?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "gestalt"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "gestalt"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-gestalt-10",
+      "category": "gestalt",
+      "subcategory": "Гештальт: контакт и осознавание",
+      "text": "Что ты чувствуешь, произнося это своими словами?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "gestalt"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "gestalt"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-psychodynamic-01",
+      "category": "psychodynamic",
+      "subcategory": "Психодинамическая рефлексия",
+      "text": "Напоминает ли эта ситуация что-то из прошлого?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "psychodynamic"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "psychodynamic"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-psychodynamic-02",
+      "category": "psychodynamic",
+      "subcategory": "Психодинамическая рефлексия",
+      "text": "Какие отношения кажутся похожими по переживанию?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "psychodynamic"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "psychodynamic"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-psychodynamic-03",
+      "category": "psychodynamic",
+      "subcategory": "Психодинамическая рефлексия",
+      "text": "Какие ожидания от окружающих здесь возникают?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "psychodynamic"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "psychodynamic"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-psychodynamic-04",
+      "category": "psychodynamic",
+      "subcategory": "Психодинамическая рефлексия",
+      "text": "Что в этой реакции кажется тебе неожиданным?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "psychodynamic"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "psychodynamic"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-psychodynamic-05",
+      "category": "psychodynamic",
+      "subcategory": "Психодинамическая рефлексия",
+      "text": "Какие чувства трудно себе разрешить?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "psychodynamic"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "psychodynamic"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-psychodynamic-06",
+      "category": "psychodynamic",
+      "subcategory": "Психодинамическая рефлексия",
+      "text": "Каким образом ты обычно защищаешься от неприятных чувств?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "psychodynamic"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "psychodynamic"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-psychodynamic-07",
+      "category": "psychodynamic",
+      "subcategory": "Психодинамическая рефлексия",
+      "text": "Какое повторяющееся противоречие ты замечаешь?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "psychodynamic"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "psychodynamic"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-psychodynamic-08",
+      "category": "psychodynamic",
+      "subcategory": "Психодинамическая рефлексия",
+      "text": "Что изменилось бы, если не считать свою первую интерпретацию единственной?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "psychodynamic"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "psychodynamic"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-psychodynamic-09",
+      "category": "psychodynamic",
+      "subcategory": "Психодинамическая рефлексия",
+      "text": "Какая часть прошлого остаётся значимой сегодня?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "psychodynamic"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "psychodynamic"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-psychodynamic-10",
+      "category": "psychodynamic",
+      "subcategory": "Психодинамическая рефлексия",
+      "text": "Как тебе хотелось бы отвечать на похожую ситуацию теперь?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "psychodynamic"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "psychodynamic"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-coaching-01",
+      "category": "coaching",
+      "subcategory": "Коучинг: цели и результаты",
+      "text": "Чего конкретно ты хочешь достичь?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "coaching"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "coaching"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-coaching-02",
+      "category": "coaching",
+      "subcategory": "Коучинг: цели и результаты",
+      "text": "Почему этот результат важен лично тебе?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "coaching"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "coaching"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-coaching-03",
+      "category": "coaching",
+      "subcategory": "Коучинг: цели и результаты",
+      "text": "Как ты поймёшь, что цель достигнута?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "coaching"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "coaching"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-coaching-04",
+      "category": "coaching",
+      "subcategory": "Коучинг: цели и результаты",
+      "text": "Что уже работает в твою пользу?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "coaching"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "coaching"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-coaching-05",
+      "category": "coaching",
+      "subcategory": "Коучинг: цели и результаты",
+      "text": "Каких ресурсов сейчас недостаёт?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "coaching"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "coaching"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-coaching-06",
+      "category": "coaching",
+      "subcategory": "Коучинг: цели и результаты",
+      "text": "Какие ограничения реальны, а какие требуют проверки?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "coaching"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "coaching"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-coaching-07",
+      "category": "coaching",
+      "subcategory": "Коучинг: цели и результаты",
+      "text": "Какие три варианта действий есть у тебя?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "coaching"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "coaching"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-coaching-08",
+      "category": "coaching",
+      "subcategory": "Коучинг: цели и результаты",
+      "text": "Какой вариант согласуется с твоими ценностями?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "coaching"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "coaching"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-coaching-09",
+      "category": "coaching",
+      "subcategory": "Коучинг: цели и результаты",
+      "text": "Какой первый шаг ты выберешь добровольно?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "coaching"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "coaching"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-coaching-10",
+      "category": "coaching",
+      "subcategory": "Коучинг: цели и результаты",
+      "text": "Когда и каким образом ты проверишь прогресс?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "coaching"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "coaching"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-family-01",
+      "category": "family",
+      "subcategory": "Семья и системные отношения",
+      "text": "Какие правила общения действуют в семье?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "family"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "family"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-family-02",
+      "category": "family",
+      "subcategory": "Семья и системные отношения",
+      "text": "Какие ожидания в семье обсуждаются открыто?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "family"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "family"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-family-03",
+      "category": "family",
+      "subcategory": "Семья и системные отношения",
+      "text": "Кто обычно берёт ответственность за конфликт?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "family"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "family"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-family-04",
+      "category": "family",
+      "subcategory": "Семья и системные отношения",
+      "text": "Где проходят личные границы каждого участника?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "family"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "family"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-family-05",
+      "category": "family",
+      "subcategory": "Семья и системные отношения",
+      "text": "Какие семейные традиции поддерживают тебя?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "family"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "family"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-family-06",
+      "category": "family",
+      "subcategory": "Семья и системные отношения",
+      "text": "Что ты хотел бы сохранить из семейного опыта?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "family"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "family"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-family-07",
+      "category": "family",
+      "subcategory": "Семья и системные отношения",
+      "text": "От каких семейных ожиданий ты хотел бы отказаться?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "family"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "family"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-family-08",
+      "category": "family",
+      "subcategory": "Семья и системные отношения",
+      "text": "Чьё мнение сейчас особенно влияет на твой выбор?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "family"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "family"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-family-09",
+      "category": "family",
+      "subcategory": "Семья и системные отношения",
+      "text": "Как можно попросить о поддержке без давления?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "family"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "family"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-family-10",
+      "category": "family",
+      "subcategory": "Семья и системные отношения",
+      "text": "Какой маленький шаг может улучшить взаимопонимание?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "family"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "family"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-acceptance-01",
+      "category": "acceptance",
+      "subcategory": "Принятие и ценности",
+      "text": "Какие переживания ты пытаешься не замечать?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "acceptance"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "acceptance"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-acceptance-02",
+      "category": "acceptance",
+      "subcategory": "Принятие и ценности",
+      "text": "Что меняется, если просто назвать переживание?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "acceptance"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "acceptance"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-acceptance-03",
+      "category": "acceptance",
+      "subcategory": "Принятие и ценности",
+      "text": "Можно ли допустить присутствие эмоции без поспешного действия?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "acceptance"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "acceptance"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-acceptance-04",
+      "category": "acceptance",
+      "subcategory": "Принятие и ценности",
+      "text": "Какая ценность важна тебе независимо от эмоции?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "acceptance"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "acceptance"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-acceptance-05",
+      "category": "acceptance",
+      "subcategory": "Принятие и ценности",
+      "text": "Что остаётся под твоим контролем сейчас?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "acceptance"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "acceptance"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-acceptance-06",
+      "category": "acceptance",
+      "subcategory": "Принятие и ценности",
+      "text": "Какой шаг соответствует ценности даже при дискомфорте?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "acceptance"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "acceptance"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-acceptance-07",
+      "category": "acceptance",
+      "subcategory": "Принятие и ценности",
+      "text": "Что помогает наблюдать мысли, не подчиняясь им автоматически?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "acceptance"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "acceptance"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-acceptance-08",
+      "category": "acceptance",
+      "subcategory": "Принятие и ценности",
+      "text": "Чем принятие факта отличается для тебя от одобрения происходящего?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "acceptance"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "acceptance"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-acceptance-09",
+      "category": "acceptance",
+      "subcategory": "Принятие и ценности",
+      "text": "Как проявить к себе бережность сегодня?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "acceptance"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "acceptance"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-acceptance-10",
+      "category": "acceptance",
+      "subcategory": "Принятие и ценности",
+      "text": "Как ты заметишь, что действуешь осознаннее?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "acceptance"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "acceptance"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-adolescents-01",
+      "category": "adolescents",
+      "subcategory": "Подростки: автономия и поддержка",
+      "text": "С кем ты можешь поговорить, когда тяжело?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "adolescents"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "adolescents"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-adolescents-02",
+      "category": "adolescents",
+      "subcategory": "Подростки: автономия и поддержка",
+      "text": "Что взрослые часто неправильно понимают в твоей ситуации?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "adolescents"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "adolescents"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-adolescents-03",
+      "category": "adolescents",
+      "subcategory": "Подростки: автономия и поддержка",
+      "text": "Какую помощь ты хотел бы получить без нравоучений?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "adolescents"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "adolescents"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-adolescents-04",
+      "category": "adolescents",
+      "subcategory": "Подростки: автономия и поддержка",
+      "text": "Какая часть твоего дня даёт чувство уверенности?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "adolescents"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "adolescents"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-adolescents-05",
+      "category": "adolescents",
+      "subcategory": "Подростки: автономия и поддержка",
+      "text": "Что помогает тебе чувствовать себя в безопасности среди сверстников?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "adolescents"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "adolescents"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-adolescents-06",
+      "category": "adolescents",
+      "subcategory": "Подростки: автономия и поддержка",
+      "text": "Где ты можешь обозначить границу словами?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "adolescents"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "adolescents"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-adolescents-07",
+      "category": "adolescents",
+      "subcategory": "Подростки: автономия и поддержка",
+      "text": "Как ты различаешь своё желание и давление компании?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "adolescents"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "adolescents"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-adolescents-08",
+      "category": "adolescents",
+      "subcategory": "Подростки: автономия и поддержка",
+      "text": "Какое занятие приносит тебе интерес без соревнования?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "adolescents"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "adolescents"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-adolescents-09",
+      "category": "adolescents",
+      "subcategory": "Подростки: автономия и поддержка",
+      "text": "Что бы ты хотел спросить у взрослого, которому доверяешь?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "adolescents"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "adolescents"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-adolescents-10",
+      "category": "adolescents",
+      "subcategory": "Подростки: автономия и поддержка",
+      "text": "Какой следующий небольшой шаг будет для тебя комфортным?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "adolescents"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "adolescents"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-older-adults-01",
+      "category": "older-adults",
+      "subcategory": "Старший возраст: опора и изменения",
+      "text": "Какие занятия поддерживают чувство смысла сейчас?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "older-adults"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "older-adults"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-older-adults-02",
+      "category": "older-adults",
+      "subcategory": "Старший возраст: опора и изменения",
+      "text": "Какие перемены требуют от тебя адаптации?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "older-adults"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "older-adults"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-older-adults-03",
+      "category": "older-adults",
+      "subcategory": "Старший возраст: опора и изменения",
+      "text": "В чём ты замечаешь свою накопленную силу?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "older-adults"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "older-adults"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-older-adults-04",
+      "category": "older-adults",
+      "subcategory": "Старший возраст: опора и изменения",
+      "text": "Какая социальная связь для тебя особенно важна?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "older-adults"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "older-adults"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-older-adults-05",
+      "category": "older-adults",
+      "subcategory": "Старший возраст: опора и изменения",
+      "text": "Как можно попросить о помощи, сохранив самостоятельность?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "older-adults"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "older-adults"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-older-adults-06",
+      "category": "older-adults",
+      "subcategory": "Старший возраст: опора и изменения",
+      "text": "Какое повседневное занятие приносит удовольствие?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "older-adults"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "older-adults"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-older-adults-07",
+      "category": "older-adults",
+      "subcategory": "Старший возраст: опора и изменения",
+      "text": "Какие новые навыки тебе интересно освоить?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "older-adults"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "older-adults"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-older-adults-08",
+      "category": "older-adults",
+      "subcategory": "Старший возраст: опора и изменения",
+      "text": "Что помогает преодолевать чувство изоляции?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "older-adults"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "older-adults"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-older-adults-09",
+      "category": "older-adults",
+      "subcategory": "Старший возраст: опора и изменения",
+      "text": "Какой опыт ты хотел бы передать другим?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "older-adults"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "older-adults"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-older-adults-10",
+      "category": "older-adults",
+      "subcategory": "Старший возраст: опора и изменения",
+      "text": "Как организовать день с учётом доступной энергии?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "older-adults"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "older-adults"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-chronic-health-01",
+      "category": "chronic-health",
+      "subcategory": "Жизнь с хроническим состоянием",
+      "text": "Как состояние здоровья влияет на твой обычный день?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "chronic-health"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "chronic-health"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-chronic-health-02",
+      "category": "chronic-health",
+      "subcategory": "Жизнь с хроническим состоянием",
+      "text": "Какие вопросы о лечении ты хотел бы задать своему врачу?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "chronic-health"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "chronic-health"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-chronic-health-03",
+      "category": "chronic-health",
+      "subcategory": "Жизнь с хроническим состоянием",
+      "text": "Что помогает тебе замечать пределы доступной энергии?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "chronic-health"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "chronic-health"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-chronic-health-04",
+      "category": "chronic-health",
+      "subcategory": "Жизнь с хроническим состоянием",
+      "text": "Какая поддержка была бы наиболее полезна?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "chronic-health"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "chronic-health"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-chronic-health-05",
+      "category": "chronic-health",
+      "subcategory": "Жизнь с хроническим состоянием",
+      "text": "Какие занятия можно адаптировать под самочувствие?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "chronic-health"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "chronic-health"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-chronic-health-06",
+      "category": "chronic-health",
+      "subcategory": "Жизнь с хроническим состоянием",
+      "text": "Что помогает не сводить всю самооценку к состоянию здоровья?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "chronic-health"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "chronic-health"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-chronic-health-07",
+      "category": "chronic-health",
+      "subcategory": "Жизнь с хроническим состоянием",
+      "text": "Какие симптомы или изменения важно обсудить со специалистом?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "chronic-health"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "chronic-health"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-chronic-health-08",
+      "category": "chronic-health",
+      "subcategory": "Жизнь с хроническим состоянием",
+      "text": "Как тебе удобнее планировать дела при колебаниях самочувствия?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "chronic-health"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "chronic-health"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-chronic-health-09",
+      "category": "chronic-health",
+      "subcategory": "Жизнь с хроническим состоянием",
+      "text": "Что помогает чувствовать участие в важных для тебя отношениях?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "chronic-health"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "chronic-health"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-chronic-health-10",
+      "category": "chronic-health",
+      "subcategory": "Жизнь с хроническим состоянием",
+      "text": "Какие формы отдыха соответствуют рекомендациям твоих специалистов?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "chronic-health"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "chronic-health"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-accessibility-01",
+      "category": "accessibility",
+      "subcategory": "Доступность и особенности коммуникации",
+      "text": "Какой формат вопросов удобнее: короткий или подробный?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "accessibility"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "accessibility"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-accessibility-02",
+      "category": "accessibility",
+      "subcategory": "Доступность и особенности коммуникации",
+      "text": "Нужно ли больше времени между вопросами?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "accessibility"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "accessibility"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-accessibility-03",
+      "category": "accessibility",
+      "subcategory": "Доступность и особенности коммуникации",
+      "text": "Предпочитаешь ли варианты ответа или свободный текст?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "accessibility"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "accessibility"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-accessibility-04",
+      "category": "accessibility",
+      "subcategory": "Доступность и особенности коммуникации",
+      "text": "Какие особенности среды мешают тебе сосредоточиться?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "accessibility"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "accessibility"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-accessibility-05",
+      "category": "accessibility",
+      "subcategory": "Доступность и особенности коммуникации",
+      "text": "Что помогает снизить сенсорную нагрузку?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "accessibility"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "accessibility"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-accessibility-06",
+      "category": "accessibility",
+      "subcategory": "Доступность и особенности коммуникации",
+      "text": "Нужны ли простые формулировки без метафор?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "accessibility"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "accessibility"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-accessibility-07",
+      "category": "accessibility",
+      "subcategory": "Доступность и особенности коммуникации",
+      "text": "Как можно сделать эту беседу более доступной?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "accessibility"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "accessibility"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-accessibility-08",
+      "category": "accessibility",
+      "subcategory": "Доступность и особенности коммуникации",
+      "text": "Хочешь ли ты сначала увидеть цель упражнения?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "accessibility"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "accessibility"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-accessibility-09",
+      "category": "accessibility",
+      "subcategory": "Доступность и особенности коммуникации",
+      "text": "Нужен ли вариант ответа «не знаю»?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "accessibility"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "accessibility"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-accessibility-10",
+      "category": "accessibility",
+      "subcategory": "Доступность и особенности коммуникации",
+      "text": "Каким способом удобнее обозначить, что тема не подходит?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "accessibility"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "accessibility"
+      ],
+      "requires_consent": false
+    },
+    {
+      "id": "ext-identity-01",
+      "category": "identity",
+      "subcategory": "Самоопределение и социальные ожидания",
+      "text": "Какие роли ты выбираешь добровольно?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "identity"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "identity"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-identity-02",
+      "category": "identity",
+      "subcategory": "Самоопределение и социальные ожидания",
+      "text": "Какие ожидания от тебя кажутся навязанными?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "identity"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "identity"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-identity-03",
+      "category": "identity",
+      "subcategory": "Самоопределение и социальные ожидания",
+      "text": "Что ты чувствуешь, когда окружающие неправильно тебя понимают?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "identity"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "identity"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-identity-04",
+      "category": "identity",
+      "subcategory": "Самоопределение и социальные ожидания",
+      "text": "Какие формы обращения к тебе комфортны?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "identity"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "identity"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-identity-05",
+      "category": "identity",
+      "subcategory": "Самоопределение и социальные ожидания",
+      "text": "Есть ли темы, которых лучше не касаться?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "identity"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "identity"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-identity-06",
+      "category": "identity",
+      "subcategory": "Самоопределение и социальные ожидания",
+      "text": "Какие отношения помогают тебе быть собой?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "identity"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "identity"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-identity-07",
+      "category": "identity",
+      "subcategory": "Самоопределение и социальные ожидания",
+      "text": "Как ты различаешь внутреннее желание и внешний стандарт?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "identity"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "identity"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-identity-08",
+      "category": "identity",
+      "subcategory": "Самоопределение и социальные ожидания",
+      "text": "Какую часть своей истории ты хотел бы переосмыслить?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "identity"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "identity"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-identity-09",
+      "category": "identity",
+      "subcategory": "Самоопределение и социальные ожидания",
+      "text": "Что помогает сохранять чувство достоинства в сложной среде?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "identity"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "identity"
+      ],
+      "requires_consent": true
+    },
+    {
+      "id": "ext-identity-10",
+      "category": "identity",
+      "subcategory": "Самоопределение и социальные ожидания",
+      "text": "Какой выбор сейчас принадлежит именно тебе?",
+      "purpose": "Добровольное самоисследование; не диагностика и не лечебное назначение.",
+      "tags": [
+        "identity"
+      ],
+      "risk_level": "standard",
+      "methods": [
+        "identity"
+      ],
+      "requires_consent": true
+    }
+  ]
+}

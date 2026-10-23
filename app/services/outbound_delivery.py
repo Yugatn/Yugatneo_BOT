@@ -31,3 +31,26 @@ def delivery_state(db_path, event_key):
             "SELECT state FROM outbound_delivery WHERE event_key=?", (event_key,)
         ).fetchone()
     return row[0] if row else None
+
+
+def mark_delivery_sent(db_path, event_key):
+    """Confirm success only for an action still in pending state."""
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.execute(
+            "UPDATE outbound_delivery SET state='sent' "
+            "WHERE event_key=? AND state='pending'", (event_key,),
+        )
+        return cursor.rowcount == 1
+
+
+def delivery_counts(db_path):
+    """Aggregate delivery states without exposing event identifiers."""
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS outbound_delivery "
+            "(event_key TEXT PRIMARY KEY, state TEXT NOT NULL)"
+        )
+        rows = conn.execute(
+            "SELECT state, COUNT(*) FROM outbound_delivery GROUP BY state"
+        ).fetchall()
+    return dict(rows)

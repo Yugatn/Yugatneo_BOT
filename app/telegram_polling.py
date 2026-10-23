@@ -40,7 +40,6 @@ MENU = {
         [{"text": "💬 Рефлексия"}, {"text": "🧠 Выбрать подход"}],
         [{"text": "📚 Вопросы"}, {"text": "🎓 Навыки и профессии"}],
         [{"text": "🛡 Возрастные настройки"}, {"text": "👨‍👩‍👧 Родительство"}],
-        [{"text": "🌐 Язык / Language"}],
         [{"text": "🌿 Диалог по ответам"}],
         [{"text": "🧩 Настроить вопросы"}, {"text": "⚙️ Удобство диалога"}],
         [{"text": "🌐 Язык / Language"}, {"text": "❔ Помощь"}],
@@ -430,7 +429,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
                                      else format_topic(topic) for topic in topics[:3]), MENU)
         return
 
-    if text in {"🎓 Навыки и профессии", "/career"}:
+    if text in {"🎓 Навыки и профессии", "/career", "/career_en"}:
         set_state(user_id, "career_interest")
         await send(client, token, chat_id, tr(get_language(DB_PATH, user_id), "career_intro"), MENU)
         return

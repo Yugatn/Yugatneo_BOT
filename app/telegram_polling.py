@@ -310,6 +310,22 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
                    "не удаляются этой командой.", MENU)
         return
 
+    if text in {"/menu_en", "/help_en"}:
+        await send(
+            client, token, chat_id,
+            "Yugatneo BOT — English navigation (beta)\\n\\n"
+            "/parenting — child development topics (English after /lang_en)\\n"
+            "/parenting_all — all parenting topics\\n"
+            "/parenting_en — simplified English parenting lessons\\n"
+            "/language — change language\\n"
+            "/start — welcome\\n"
+            "/delete_my_data — erase locally stored user records\\n\\n"
+            "The balance wheel, coaching and career guidance are not yet fully translated. "
+            "This bot is for education and self-reflection, not diagnosis or therapy.",
+            MENU,
+        )
+        return
+
     if text in {"/language", "/lang", "🌐 Язык / Language"}:
         await send(client, token, chat_id,
                    "Выберите язык / Choose language: /lang_ru — Русский; /lang_en — English. "
@@ -322,7 +338,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         set_language(DB_PATH, user_id, language)
         set_state(user_id, "menu")
         await send(client, token, chat_id,
-                   "English selected. Parenting topics: /parenting. "
+                   "English selected. English navigation: /menu_en. Parenting topics: /parenting. "
                    "Other sections are not fully translated yet."
                    if language == "en" else "Выбран русский язык.", MENU)
         return

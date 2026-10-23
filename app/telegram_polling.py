@@ -32,7 +32,7 @@ from app.services.telegram_text import split_telegram_text
 from app.services.outbound_feature_flag import outbound_guard_requested
 from app.services.outbound_update_freshness import is_fresh_experimental_start
 from app.services.outbound_delivery import deliver_user_reserved, outbound_event_key
-from app.services.outbound_deletion_fence import purge_expired_deletion_fences
+from app.services.outbound_deletion_fence import (purge_expired_deletion_fences, is_user_deletion_fenced)
 from app.services.bot_security import check_message, init_security
 from app.services.idempotent_reflection import save_report_once
 from app.services.sqlite_security import secure_sqlite_path, secure_sqlite_sidecars
@@ -359,6 +359,10 @@ async def handle_update_message(client, token, update_id, message):
     # The flag is strictly experimental: old or undated /start updates
     # must never trigger a delayed response after a deletion fence expires.
     if not is_fresh_experimental_start(message.get("date")):
+        return
+    # Do not recreate user state while a post-deletion suppression fence is
+    # active. Safety and deletion requests bypass this experimental branch.
+    if is_user_deletion_fenced(DB_PATH, str(user["id"])):
         return
     reset_token = _OUTBOUND_CONTEXT.set((update_id, str(user["id"]), 0))
     try:

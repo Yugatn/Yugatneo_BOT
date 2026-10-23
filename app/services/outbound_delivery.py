@@ -54,3 +54,19 @@ def delivery_counts(db_path):
             "SELECT state, COUNT(*) FROM outbound_delivery GROUP BY state"
         ).fetchall()
     return dict(rows)
+
+
+def reserve_delivery(db_path, event_key):
+    """Atomically reserve an action; never auto-retry an uncertain send."""
+    if not isinstance(event_key, str) or not event_key or len(event_key) > 128:
+        raise ValueError("Invalid event key")
+    with sqlite3.connect(db_path, timeout=10) as conn:
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS outbound_delivery "
+            "(event_key TEXT PRIMARY KEY, state TEXT NOT NULL)"
+        )
+        cursor = conn.execute(
+            "INSERT OR IGNORE INTO outbound_delivery VALUES (?, 'ambiguous')",
+            (event_key,),
+        )
+        return cursor.rowcount == 1

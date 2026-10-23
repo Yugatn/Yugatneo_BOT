@@ -80,3 +80,16 @@ def confirm_reserved_delivery(db_path, event_key):
             "WHERE event_key=? AND state='ambiguous'", (event_key,),
         )
         return cursor.rowcount == 1
+
+
+async def deliver_reserved(db_path, event_key, send_callable):
+    """Opt-in transport adapter; no automatic replay after an unknown outcome."""
+    if not reserve_delivery(db_path, event_key):
+        return False
+    try:
+        await send_callable()
+    except Exception:
+        # Keep ambiguous: remote acceptance is unknown.
+        raise
+    confirm_reserved_delivery(db_path, event_key)
+    return True

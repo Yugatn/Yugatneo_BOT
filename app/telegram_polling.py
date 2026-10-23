@@ -375,6 +375,12 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
                    "не удаляются этой командой.", MENU)
         return
 
+    if text in {"/back", "◀️ Назад"}:
+        COACHING_SESSIONS.pop(user_id, None)
+        set_state(user_id, "menu")
+        await send(client, token, chat_id, "Возврат в главное меню. Незавершённая сессия отменена.", MENU)
+        return
+
     # Stateless channel adapter over the explicit-consent coaching state machine.
     # Session answers remain in process memory only, not in SQLite.
     if text in {"/coaching_session", "🧭 Коучинг по шагам"}:
@@ -478,12 +484,6 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             "Выбери «Колесо баланса» для субъективной оценки сфер жизни от 0 до 10 или «Рефлексия» для диалога. «Вопросы» и «Диалог по ответам» работают без ИИ.",
             MENU,
         )
-        return
-
-    if text in {"/back", "◀️ Назад"}:
-        COACHING_SESSIONS.pop(user_id, None)
-        set_state(user_id, "menu")
-        await send(client, token, chat_id, "Возврат в главное меню. Незавершённая сессия отменена.", MENU)
         return
 
     if text in SUBMENUS:

@@ -23,7 +23,7 @@ from app.services.safety import classify_crisis_message, crisis_response
 from app.services.diagnostic_flow import handle_diagnostic_message
 from app.services.parenting_knowledge import TOPICS, format_topic
 from app.services.parenting_index import init_index, search_index
-from app.services.language_preferences import get_language, set_language, english_topic
+from app.services.language_preferences import get_language, set_language, english_topic, ensure_language_table
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -147,6 +147,7 @@ def preference_keyboard() -> dict:
 
 def init_db() -> None:
     with sqlite3.connect(DB_PATH) as conn:
+        ensure_language_table(conn)
         conn.execute("""
             CREATE TABLE IF NOT EXISTS wheel_scores (
                 telegram_user_id TEXT NOT NULL,
@@ -290,6 +291,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
 
     if text in {"/delete_my_data", "🗑 Удалить мои данные"}:
         with sqlite3.connect(DB_PATH) as conn:
+            ensure_language_table(conn)
             for table in ("wheel_scores", "wheel_score_history", "wheel_actions", "wheel_action_history", "career_reflection", "age_access", "bot_state", "dialogue_preferences", "user_language"):
                 conn.execute(f"DELETE FROM {table} WHERE telegram_user_id=?", (user_id,))
         try:

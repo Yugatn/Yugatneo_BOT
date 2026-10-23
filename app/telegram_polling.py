@@ -9,6 +9,7 @@ import json
 import logging
 import re
 import sqlite3
+import time
 from pathlib import Path
 from typing import Any
 
@@ -30,6 +31,7 @@ from app.services.report_formatter import build_report
 from app.services.telegram_text import split_telegram_text
 from app.services.outbound_feature_flag import outbound_guard_requested
 from app.services.outbound_delivery import deliver_user_reserved, outbound_event_key
+from app.services.outbound_deletion_fence import purge_expired_deletion_fences
 from app.services.bot_security import check_message, init_security
 from app.services.idempotent_reflection import save_report_once
 from app.services.sqlite_security import secure_sqlite_path, secure_sqlite_sidecars
@@ -1198,6 +1200,10 @@ async def main() -> None:
     if not token:
         raise SystemExit("TELEGRAM_BOT_TOKEN не задан. Добавь токен в локальный .env; не публикуй его в GitHub или чате.")
     init_db()
+    # Cleanup retains no deleted-account marker beyond its required window
+    # while the worker is running. Fail closed if maintenance cannot write.
+    purge_expired_deletion_fences(DB_PATH)
+    next_fence_cleanup = time.monotonic() + 3600
     offset: int | None = None
     timeout = httpx.Timeout(40.0, connect=10.0)
     async with httpx.AsyncClient(timeout=timeout) as client:
@@ -1211,6 +1217,9 @@ async def main() -> None:
             )
         log.info("Polling started for @%s. Stop with Ctrl+C.", me.get("username", "bot"))
         while True:
+            if time.monotonic() >= next_fence_cleanup:
+                purge_expired_deletion_fences(DB_PATH)
+                next_fence_cleanup = time.monotonic() + 3600
             params: dict[str, Any] = {"timeout": 30, "allowed_updates": ["message"]}
             if offset is not None:
                 params["offset"] = offset

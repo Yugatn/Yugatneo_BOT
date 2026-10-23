@@ -3,7 +3,9 @@
 ## Implemented in the experimental path
 
 The private-chat `/start` response uses a user-scoped outbound receipt only
-when `YUGATNEO_EXPERIMENTAL_OUTBOUND=true` and `APP_ENV` is\n`development`, `test`, or `staging`. The flag is OFF by default;\n`production` and unknown environments cannot enable this path.
+when `YUGATNEO_EXPERIMENTAL_OUTBOUND=true` and `APP_ENV` is
+`development`, `test`, or `staging`. The flag is OFF by default;
+`production` and unknown environments cannot enable this path.
 Safety messages, normal interactions and deletion acknowledgements retain
 the ordinary Telegram transport.
 

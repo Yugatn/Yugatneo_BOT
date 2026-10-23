@@ -9,7 +9,7 @@ public database, or production user.
 - [x] Regression tests for successful send and lost acknowledgement
 - [x] Scoped outbound receipts and account deletion tests
 - [x] Tests for concurrent reservations and cancelled requests
-- [x] Explicit opt-in experimental /start integration
+- [x] Explicit opt-in experimental /start integration, prohibited in production
 - [x] Test failure before remote acceptance and repeated delivery
 - [x] Test malformed updates and boundary cases for the /start guard
 - [x] Check report encryption and restore with a synthetic staging fixture
@@ -21,7 +21,7 @@ public database, or production user.
 - [x] Produce operator runbook with measurable pass/fail acceptance
 - [x] Block new experimental outbound reservations after deletion across processes for 24 hours; test concurrency and expiry
 - [ ] Review in-flight sends that were already reserved and long-delayed (>24h) replay semantics
-- [ ] Independently review security, privacy and log-sanitization evidence
+- [x] Document internal privacy/security risk inventory and reproducible evidence\n- [ ] Obtain independent security, privacy and clinical reviews (human sign-off)
 
 The synthetic acceptance runner is now part of Tests CI on Python 3.11 and 3.12.
 A scheduled/on-demand dependency security audit is also active. The initial

@@ -50,4 +50,4 @@ def set_language(path, user_id: str, language: str) -> None:
 
 def english_topic(key: str) -> str:
     title, summary = EN_TOPICS[key]
-    return f"📘 {title}\\n\\n{summary}\\n\\nEducational information, not a diagnosis."
+    return f"📘 {title}\n\n{summary}\n\nEducational information, not a diagnosis."

@@ -37,7 +37,7 @@ def verify_sqlite_backup(db_path) -> BackupCheck:
             else:
                 schema_ok = True
             return BackupCheck(status == "ok" and schema_ok,
-                               "ok" if status == "ok" else "failed",
+                               "ok" if status == "ok" and schema_ok else "invalid_schema" if status == "ok" else "failed",
                                len(tables))
     except sqlite3.DatabaseError:
         return BackupCheck(False, "unreadable", 0)

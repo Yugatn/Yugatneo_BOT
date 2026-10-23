@@ -41,8 +41,16 @@ def test_deletion_fence_expires_and_is_purgeable(tmp_path, monkeypatch):
         fence.time, "time", lambda: 20_000 + fence.DELETION_FENCE_SECONDS
     )
     assert reserve_user_delivery(db, "17", "after-expiration")
-    assert fence.purge_expired_deletion_fences(db) == 1
+    # The reservation itself purges this user's expired marker.
     assert fence.purge_expired_deletion_fences(db) == 0
+    monkeypatch.setattr(fence.time, "time", lambda: 30_000)
+    delete_telegram_user_records(db, "another-user")
+    assert fence.purge_expired_deletion_fences(
+        db, now=30_000 + fence.DELETION_FENCE_SECONDS
+    ) == 1
+    assert fence.purge_expired_deletion_fences(
+        db, now=30_000 + fence.DELETION_FENCE_SECONDS
+    ) == 0
 
 
 def test_failed_deletion_does_not_create_suppression_marker(tmp_path):

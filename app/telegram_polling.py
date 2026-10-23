@@ -30,6 +30,7 @@ from app.services.telegram_text import split_telegram_text
 from app.services.bot_security import check_message, init_security
 from app.services.sqlite_security import secure_sqlite_path, secure_sqlite_sidecars
 from app.services.personal_data import delete_telegram_user_records
+from app.services.diagnostic_encryption import encrypt_diagnostic_json, decrypt_diagnostic_json
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -508,6 +509,8 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             career = conn.execute(
                 "SELECT interest, skill, next_experiment FROM career_reflection "
                 "WHERE telegram_user_id=?", (user_id,)).fetchone()
+        if career is not None:
+            career = tuple(decrypt_diagnostic_json(value) for value in career)
         report = build_report(get_language(DB_PATH, user_id), scores, career, active, completed)
         await send(client, token, chat_id, report, MENU)
         return
@@ -825,7 +828,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             conn.execute("INSERT INTO career_reflection(telegram_user_id, interest, skill, next_experiment) "
                          "VALUES (?, ?, ?, '') ON CONFLICT(telegram_user_id) DO UPDATE SET "
                          "interest=excluded.interest, skill=excluded.skill, next_experiment=''",
-                         (user_id, sphere or "", text))
+                         (user_id, encrypt_diagnostic_json(sphere or ""), encrypt_diagnostic_json(text)))
         await send(client, token, chat_id, tr(get_language(DB_PATH, user_id), "career_experiment"), MENU)
         return
 
@@ -835,7 +838,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             return
         with sqlite3.connect(DB_PATH) as conn:
             conn.execute("UPDATE career_reflection SET next_experiment=?, updated_at=CURRENT_TIMESTAMP "
-                         "WHERE telegram_user_id=?", (text, user_id))
+                         "WHERE telegram_user_id=?", (encrypt_diagnostic_json(text), user_id))
         set_state(user_id, "menu")
         await send(client, token, chat_id, tr(get_language(DB_PATH, user_id), "career_saved"), MENU)
         return

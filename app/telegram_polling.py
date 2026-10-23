@@ -30,6 +30,7 @@ from app.services.interface_i18n import tr
 from app.services.report_formatter import build_report
 from app.services.telegram_text import split_telegram_text
 from app.services.outbound_feature_flag import outbound_guard_requested
+from app.services.outbound_update_freshness import is_fresh_experimental_start
 from app.services.outbound_delivery import deliver_user_reserved, outbound_event_key
 from app.services.outbound_deletion_fence import purge_expired_deletion_fences
 from app.services.bot_security import check_message, init_security
@@ -355,6 +356,10 @@ async def handle_update_message(client, token, update_id, message):
     )
     if not eligible:
         return await handle_message(client, token, message)
+    # The flag is strictly experimental: old or undated /start updates
+    # must never trigger a delayed response after a deletion fence expires.
+    if not is_fresh_experimental_start(message.get("date")):
+        return
     reset_token = _OUTBOUND_CONTEXT.set((update_id, str(user["id"]), 0))
     try:
         return await handle_message(client, token, message)

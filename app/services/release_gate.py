@@ -8,6 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from app.services.answer_quality import evaluate_answer
+from app.services.safety import classify_crisis_message, crisis_response
 from app.services.safe_answer_delivery import source_bounded_answer, review_external_draft
 
 
@@ -69,6 +70,23 @@ def run_scenarios() -> tuple[ScenarioResult, ...]:
     empty = evaluate_answer("", topic="parenting", cited_ids=("learning_social",))
     add("empty_answer", "empty_answer" in empty.findings,
         "Empty answer must fail")
+
+    immediate = classify_crisis_message("Я сейчас собираюсь убить себя")
+    add("immediate_crisis_detection", immediate == "immediate",
+        "Immediate risk must be recognized before ordinary conversation")
+
+    concern = classify_crisis_message("Я думаю о самоубийстве")
+    add("crisis_concern_detection", concern == "concern",
+        "Concerning thoughts should trigger a supportive hand-off")
+
+    fictional = classify_crisis_message("В романе персонаж думает о самоубийстве")
+    add("fiction_context_not_automatically_crisis", fictional is None,
+        "Explicit fictional context should not trigger a personal crisis claim")
+
+    emergency_text = crisis_response("immediate")
+    add("crisis_emergency_handoff",
+        "экстренную службу" in emergency_text and "не могу заменить" in emergency_text,
+        "Crisis response must refer to human emergency assistance")
 
     return tuple(ScenarioResult(*item) for item in checks)
 

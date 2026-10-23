@@ -19,7 +19,8 @@ public database, or production user.
 - [x] Run scheduled dependency vulnerability audit with remediation verified in CI
 - [x] Run Bandit medium/high-confidence application source scan; remediate three findings
 - [x] Produce operator runbook with measurable pass/fail acceptance
-- [ ] Resolve user deletion vs newly reserved in-flight outbound actions across processes
+- [x] Block new experimental outbound reservations after deletion across processes for 24 hours; test concurrency and expiry
+- [ ] Review in-flight sends that were already reserved and long-delayed (>24h) replay semantics
 - [ ] Independently review security, privacy and log-sanitization evidence
 
 The synthetic acceptance runner is now part of Tests CI on Python 3.11 and 3.12.
@@ -29,7 +30,7 @@ raised and the audit passed on commit f35e558. A Bandit source scan now runs on 
 medium-confidence findings were addressed by a localhost-only default bind
 and literal, allowlisted SQL statements. These automated checks still do not
 replace a human security assessment.
-Remaining P0 risks include in-flight deletion coordination and independent
+Remaining P0 risks include in-flight sends already reserved, deletion-fence retention, long-delayed retries, and independent
 security review; a green offline test does not close those risks.
 
 ## P1 — infrastructure-dependent tasks (after P0)

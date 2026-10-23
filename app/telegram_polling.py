@@ -1129,6 +1129,8 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
 
 
 from app.services.async_update_dispatch import dispatch_update
+from app.services.update_quarantine import quarantine_if_exhausted
+from app.services.update_jobs import status as update_job_status
 
 
 async def main() -> None:
@@ -1165,6 +1167,9 @@ async def main() -> None:
                                 lambda: handle_message(client, token, update["message"]),
                             )
                             if not processed:
+                                job = update_job_status(DB_PATH, update_id)
+                                if job and job[0] == 'quarantined':
+                                    raise SystemExit('Telegram update quarantined; operator review required')
                                 # An earlier attempt still holds its lease.
                                 # Do not acknowledge this or later updates.
                                 await asyncio.sleep(3)
@@ -1173,6 +1178,9 @@ async def main() -> None:
                     except Exception:
                         # Do not advance offset after a failed handler.
                         # Telegram will redeliver after the processing lease.
+                        if quarantine_if_exhausted(DB_PATH, update_id):
+                            log.error("Telegram update quarantined after repeated failures (redacted)")
+                            raise SystemExit("Telegram update quarantined; operator review required")
                         log.error("Telegram update failed; awaiting safe retry (redacted)")
                         await asyncio.sleep(3)
                         break

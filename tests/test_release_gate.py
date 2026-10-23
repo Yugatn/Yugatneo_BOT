@@ -3,7 +3,7 @@ from app.services.release_gate import release_gate, run_scenarios
 
 def test_release_gate_scenarios_all_pass():
     result = release_gate()
-    assert result["total"] >= 8
+    assert result["total"] >= 12
     assert result["passed"] == result["total"]
     assert result["failed"] == []
     assert result["ready_for_controlled_review"]

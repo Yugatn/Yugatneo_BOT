@@ -25,7 +25,10 @@ A scheduled/on-demand dependency security audit is also active. The initial
 scan identified vulnerable older pytest/cryptography constraints; these were
 raised and the audit passed on commit f35e558. Dependency vulnerability
 scanning does not replace a source code security assessment.
-Remaining P0 risks include in-flight deletion coordination and independent\nsecurity review; a green offline test does not close those risks.\n\n## P1 — infrastructure-dependent tasks (after P0)
+Remaining P0 risks include in-flight deletion coordination and independent
+security review; a green offline test does not close those risks.
+
+## P1 — infrastructure-dependent tasks (after P0)
 
 - [ ] Create isolated staging Telegram bot credentials
 - [ ] Configure one polling worker on a protected host

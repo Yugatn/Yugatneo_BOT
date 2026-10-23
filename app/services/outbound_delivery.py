@@ -159,5 +159,12 @@ async def deliver_user_reserved(db_path, user_id, event_key, send_callable):
     """Optional user-scoped transport; uncertainty suppresses automatic replay."""
     if not reserve_user_delivery(db_path, user_id, event_key):
         return False
+    # Narrow the reservation-to-send gap: deletion may have committed
+    # between the two operations. This check cannot recall or prevent an
+    # already in-flight network request.
+    with sqlite3.connect(db_path, timeout=10) as conn:
+        conn.execute("BEGIN IMMEDIATE")
+        if is_delivery_blocked(conn, user_id):
+            return False
     await send_callable()
     return confirm_user_delivery(db_path, user_id, event_key)

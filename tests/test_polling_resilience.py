@@ -18,5 +18,5 @@ def test_polling_handler_isolation():
 
 
 def test_polling_does_not_log_private_payload():
-    assert 'log.exception("Telegram update processing failed; update skipped")' in SOURCE
+    assert 'log.error("Telegram update processing failed; update skipped (details redacted)")' in SOURCE
     assert "log.exception(str(update))" not in SOURCE

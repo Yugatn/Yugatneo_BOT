@@ -31,6 +31,7 @@ from app.services.bot_security import check_message, init_security
 from app.services.sqlite_security import secure_sqlite_path, secure_sqlite_sidecars
 from app.services.personal_data import delete_telegram_user_records
 from app.services.guided_reflection import Session as GuidedSession, start as start_guided, advance as guided_advance, summary as guided_summary
+from app.services.guided_report_storage import save_report as save_guided_report, read_report as read_guided_report
 from app.services.diagnostic_encryption import encrypt_diagnostic_json, decrypt_diagnostic_json
 from app.services.startup_security import validate_encryption_startup
 from app.services.wheel_ray_catalog import catalog, normalize_ray_title
@@ -66,6 +67,7 @@ SUBMENUS = {
     "📄 Мои результаты": [
         ["📊 Мои оценки", "📈 История колеса"],
         ["📄 Мой отчёт", "✅ Отметить выполнение"],
+        ["/my_guided"],
     ],
     "⚙️ Настройки": [
         ["🌐 Язык / Language", "⚙️ Удобство диалога"],
@@ -80,6 +82,7 @@ CATALOG = QuestionCatalog()
 from app.services.coaching_session import PROMPTS as COACHING_PROMPTS
 COACHING_SESSIONS: dict[str, CoachingSession] = {}
 GUIDED_SESSIONS: dict[str, GuidedSession] = {}
+GUIDED_PENDING: dict[str, str] = {}
 CANCEL_WORDS = {"/cancel", "отмена", "стоп", "назад"}
 APPROACHES = {
     "Гештальт-рефлексия": "Что ты замечаешь прямо сейчас: в чувствах, телесных ощущениях и потребностях? Что остаётся незавершённым и требует внимания?",
@@ -341,6 +344,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
     # Safety takes precedence over every scripted flow, not just LLM reflection.
     crisis = classify_crisis_message(text)
     if crisis:
+        GUIDED_PENDING.pop(user_id, None)
         GUIDED_SESSIONS.pop(user_id, None)
         COACHING_SESSIONS.pop(user_id, None)
         set_state(user_id, "menu")
@@ -355,6 +359,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             return
 
     if text in {"/delete_my_data", "🗑 Удалить мои данные"}:
+        GUIDED_PENDING.pop(user_id, None)
         GUIDED_SESSIONS.pop(user_id, None)
         COACHING_SESSIONS.pop(user_id, None)
         try:
@@ -381,12 +386,43 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         return
 
     if text in {"/back", "◀️ Назад"}:
+        GUIDED_PENDING.pop(user_id, None)
+        GUIDED_SESSIONS.pop(user_id, None)
         COACHING_SESSIONS.pop(user_id, None)
         set_state(user_id, "menu")
         await send(client, token, chat_id, "Возврат в главное меню. Незавершённая сессия отменена.", MENU)
         return
 
+    if text == "/save_guided":
+        pending = GUIDED_PENDING.get(user_id)
+        if pending is None:
+            await send(client, token, chat_id, "Нет завершённого итога для сохранения.", MENU)
+            return
+        try:
+            save_guided_report(DB_PATH, user_id, pending)
+        except (ValueError, RuntimeError):
+            await send(client, token, chat_id,
+                       "Сохранение недоступно: необходим серверный ключ шифрования.", MENU)
+            return
+        GUIDED_PENDING.pop(user_id, None)
+        await send(client, token, chat_id,
+                   "Итог сохранён в зашифрованном виде. /my_guided — открыть.", MENU)
+        return
+    if text == "/discard_guided":
+        GUIDED_PENDING.pop(user_id, None)
+        await send(client, token, chat_id, "Временный итог удалён из памяти.", MENU)
+        return
+    if text == "/my_guided":
+        try:
+            saved = read_guided_report(DB_PATH, user_id)
+        except (ValueError, RuntimeError):
+            await send(client, token, chat_id, "Не удалось прочитать сохранённый итог.", MENU)
+            return
+        await send(client, token, chat_id, saved or "Сохранённого итога пока нет.", MENU)
+        return
+
     if text in {"/guided", "📝 Рефлексия с итогом"}:
+        GUIDED_PENDING.pop(user_id, None)
         GUIDED_SESSIONS[user_id] = start_guided()
         COACHING_SESSIONS.pop(user_id, None)
         q = GUIDED_SESSIONS[user_id].current
@@ -411,8 +447,11 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             return
         if session.finished:
             GUIDED_SESSIONS.pop(user_id, None)
+            report = guided_summary(session, get_language(DB_PATH, user_id))
+            GUIDED_PENDING[user_id] = report
             await send(client, token, chat_id,
-                       guided_summary(session, get_language(DB_PATH, user_id)), MENU)
+                       report + "\n\nСохранить итог? /save_guided — сохранить зашифрованно; "
+                       "/discard_guided — не сохранять.", MENU)
         else:
             GUIDED_SESSIONS[user_id] = session
             question = session.current
@@ -529,6 +568,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         return
 
     if text in SUBMENUS:
+        GUIDED_PENDING.pop(user_id, None)
         GUIDED_SESSIONS.pop(user_id, None)
         COACHING_SESSIONS.pop(user_id, None)
         set_state(user_id, "menu")

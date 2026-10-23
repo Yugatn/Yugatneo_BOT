@@ -6,6 +6,7 @@ from app import telegram_polling as polling
 
 def test_safety_and_deletion_messages_bypass_experimental_context(monkeypatch):
     monkeypatch.setattr(polling, "outbound_guard_requested", lambda: True)
+    monkeypatch.setattr(polling, "is_user_deletion_fenced", lambda db, user: False)
     observed = []
 
     async def handler(client, token, message):

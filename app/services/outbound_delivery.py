@@ -111,3 +111,23 @@ def outbound_event_key(update_id, response_index, action="sendMessage"):
     if len(key) > 128:
         raise ValueError("Outbound event key too long")
     return key
+
+
+def reserve_user_delivery(db_path, user_id, event_key):
+    """Reserve a user-scoped outbound event in a separate, deletable ledger."""
+    if not isinstance(user_id, str) or not user_id:
+        raise ValueError("Missing user ID")
+    if not isinstance(event_key, str) or not event_key or len(event_key) > 128:
+        raise ValueError("Invalid event key")
+    with sqlite3.connect(db_path, timeout=10) as conn:
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS user_outbound_delivery "
+            "(event_key TEXT PRIMARY KEY, telegram_user_id TEXT NOT NULL, "
+            "state TEXT NOT NULL)"
+        )
+        result = conn.execute(
+            "INSERT OR IGNORE INTO user_outbound_delivery "
+            "(event_key, telegram_user_id, state) VALUES (?, ?, 'ambiguous')",
+            (event_key, user_id),
+        )
+        return result.rowcount == 1

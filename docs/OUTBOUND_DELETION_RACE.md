@@ -25,8 +25,14 @@ An offline maintenance function `purge_expired_deletion_fences(db_path)`
 also exists. If the bot is offline beyond expiry, the marker remains until
 the next cleanup run. This retention mechanism requires privacy approval.
 
+The experimental transport now checks the fence a second time immediately
+before invoking the network sender, closing the testable deletion window
+between reservation and send initiation. This is a mitigation, not an
+atomic guarantee across a later await or an already started HTTP request.
+
 Tests cover concurrent worker reservations, another Python interpreter,
-transaction rollback, expiry and user-scoped deletion. The offline acceptance
+transaction rollback, expiry, a deletion inserted between reservation and
+send initiation, and user-scoped deletion. The offline acceptance
 runner also checks that a deleted user's next reservation is blocked.
 
 ## What this does NOT guarantee

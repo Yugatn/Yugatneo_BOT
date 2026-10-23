@@ -1,0 +1,33 @@
+[Unit]
+Description=YUGATNEO AMALGAMA read-only Guardian verification
+Documentation=https://github.com/Yugatn/Yugatneo_BOT
+After=local-fs.target
+ConditionPathExists=/etc/amalgama/guardian.env
+
+[Service]
+Type=oneshot
+User=amalgama
+Group=amalgama
+EnvironmentFile=/etc/amalgama/guardian.env
+ExecStart=/usr/bin/python3 -m amalgama.guardian_worker --envelope /etc/amalgama/signed-agents.json --public-key-hex ${AMALGAMA_PUBLIC_KEY_HEX} --root /opt/amalgama/agents
+WorkingDirectory=/opt/amalgama
+PrivateNetwork=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+LockPersonality=yes
+RestrictSUIDSGID=yes
+RestrictAddressFamilies=AF_UNIX
+CapabilityBoundingSet=
+AmbientCapabilities=
+ReadOnlyPaths=/opt/amalgama /etc/amalgama
+UMask=0077
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

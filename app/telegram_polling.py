@@ -28,7 +28,7 @@ from app.services.interface_i18n import tr
 from app.services.report_formatter import build_report
 from app.services.telegram_text import split_telegram_text
 from app.services.bot_security import check_message, init_security
-from app.services.update_deduplication import claim_update
+from app.services.idempotent_reflection import save_report_once
 from app.services.sqlite_security import secure_sqlite_path, secure_sqlite_sidecars
 from app.services.personal_data import delete_telegram_user_records
 from app.services.guided_reflection import Session as GuidedSession, start as start_guided, advance as guided_advance, summary as guided_summary
@@ -406,7 +406,10 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             await send(client, token, chat_id, "Нет завершённого итога для сохранения.", MENU)
             return
         try:
-            save_guided_report(DB_PATH, user_id, pending)
+            message_id = message.get("message_id")
+            if type(message_id) is not int or message_id < 0:
+                raise ValueError("Missing message ID")
+            save_report_once(DB_PATH, user_id, pending, message_id)
         except (ValueError, RuntimeError):
             await send(client, token, chat_id,
                        "Сохранение недоступно: необходим серверный ключ шифрования.", MENU)

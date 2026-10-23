@@ -6,6 +6,12 @@ equivalent to real-world safety or clinical validation.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import sqlite3
+import tempfile
+from pathlib import Path
+
+from app.services.privacy_audit import audit_reflection_storage
+from app.services.guided_report_storage import ensure_table
 
 from app.services.answer_quality import evaluate_answer
 from app.services.safety import classify_crisis_message, crisis_response
@@ -87,6 +93,20 @@ def run_scenarios() -> tuple[ScenarioResult, ...]:
     add("crisis_emergency_handoff",
         "экстренную службу" in emergency_text and "не могу заменить" in emergency_text,
         "Crisis response must refer to human emergency assistance")
+
+    with tempfile.TemporaryDirectory() as tmp:
+        db_path = Path(tmp) / "privacy.sqlite"
+        with sqlite3.connect(db_path) as conn:
+            ensure_table(conn)
+            conn.execute(
+                "INSERT INTO guided_reflection_reports "
+                "(telegram_user_id, encrypted_summary) VALUES (?, ?)",
+                ("test-user", "unprotected private message"),
+            )
+        audit = audit_reflection_storage(db_path)
+        add("plaintext_storage_detected",
+            not audit.passed and "unencrypted_reflection_detected" in audit.findings,
+            "Unencrypted reflection data must be detected without disclosure")
 
     return tuple(ScenarioResult(*item) for item in checks)
 

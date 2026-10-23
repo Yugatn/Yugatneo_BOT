@@ -93,3 +93,17 @@ async def deliver_reserved(db_path, event_key, send_callable):
         raise
     confirm_reserved_delivery(db_path, event_key)
     return True
+
+
+def outbound_event_key(update_id, response_index, action="sendMessage"):
+    """Deterministic, non-content identifier for one Telegram response."""
+    if type(update_id) is not int or update_id < 0:
+        raise ValueError("update_id must be a non-negative integer")
+    if type(response_index) is not int or response_index < 0:
+        raise ValueError("response_index must be a non-negative integer")
+    if action not in ("sendMessage", "editMessageText"):
+        raise ValueError("Unsupported outbound action")
+    key = f"telegram:{update_id}:{response_index}:{action}"
+    if len(key) > 128:
+        raise ValueError("Outbound event key too long")
+    return key

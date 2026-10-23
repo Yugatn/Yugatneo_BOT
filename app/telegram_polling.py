@@ -32,6 +32,7 @@ from app.services.sqlite_security import secure_sqlite_path, secure_sqlite_sidec
 from app.services.personal_data import delete_telegram_user_records
 from app.services.guided_reflection import Session as GuidedSession, start as start_guided, advance as guided_advance, summary as guided_summary
 from app.services.guided_report_storage import save_report as save_guided_report, read_report as read_guided_report
+from app.services.reflection_action_plan import build_action_plan
 from app.services.diagnostic_encryption import encrypt_diagnostic_json, decrypt_diagnostic_json
 from app.services.startup_security import validate_encryption_startup
 from app.services.wheel_ray_catalog import catalog, normalize_ray_title
@@ -447,7 +448,9 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             return
         if session.finished:
             GUIDED_SESSIONS.pop(user_id, None)
-            report = guided_summary(session, get_language(DB_PATH, user_id))
+            locale = get_language(DB_PATH, user_id)
+            report = (guided_summary(session, locale) + "\n\n" +
+                      build_action_plan(session, locale))
             GUIDED_PENDING[user_id] = report
             await send(client, token, chat_id,
                        report + "\n\nСохранить итог? /save_guided — сохранить зашифрованно; "

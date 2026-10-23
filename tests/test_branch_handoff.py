@@ -11,7 +11,7 @@ def test_terminal_keyboard_explicit_consent():
 
 def test_branch_catalog_suggestion_uses_safe_catalog():
     result = branch_catalog_suggestion("anxiety", DialoguePreferences())
-    assert result.startswith("\\n\\nВопрос из библиотеки")
+    assert result.startswith("\n\nВопрос из библиотеки")
 
 
 def test_handoff_context_is_not_diagnostic():

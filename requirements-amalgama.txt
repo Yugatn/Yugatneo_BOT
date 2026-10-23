@@ -1,0 +1,2 @@
+# Optional AMALGAMA signed manifest verification dependency.
+cryptography>=44.0,<47.0

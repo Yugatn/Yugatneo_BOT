@@ -35,4 +35,4 @@ jobs:
         env:
           APP_ENV: test
           LLM_PROVIDER: mock
-        run: pytest -q
+        run: python -m pytest -q

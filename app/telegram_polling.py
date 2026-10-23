@@ -159,12 +159,6 @@ def init_db() -> None:
             )
         """)
         conn.execute("""
-            CREATE TABLE IF NOT EXISTS user_locale (
-                telegram_user_id TEXT PRIMARY KEY,
-                locale TEXT NOT NULL CHECK(locale IN ('ru', 'en'))
-            )
-        """)
-        conn.execute("""
             CREATE TABLE IF NOT EXISTS dialogue_preferences (
                 telegram_user_id TEXT PRIMARY KEY,
                 age_group TEXT NOT NULL DEFAULT 'unknown',
@@ -299,7 +293,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
     if text in {"/delete_my_data", "🗑 Удалить мои данные"}:
         with sqlite3.connect(DB_PATH) as conn:
             ensure_language_table(conn)
-            for table in ("wheel_scores", "wheel_score_history", "wheel_actions", "wheel_action_history", "career_reflection", "age_access", "user_locale", "bot_state", "dialogue_preferences", "user_language"):
+            for table in ("wheel_scores", "wheel_score_history", "wheel_actions", "wheel_action_history", "career_reflection", "age_access", "bot_state", "dialogue_preferences", "user_language"):
                 conn.execute(f"DELETE FROM {table} WHERE telegram_user_id=?", (user_id,))
         try:
             from app.services.diagnostic_flow import clear_diagnostic
@@ -316,7 +310,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
                    "не удаляются этой командой.", MENU)
         return
 
-    if text in {"/language", "🌐 Язык / Language"}:
+    if text in {"/language", "/lang", "🌐 Язык / Language"}:
         await send(client, token, chat_id,
                    "Выберите язык / Choose language: /lang_ru — Русский; /lang_en — English. "
                    "English currently covers language controls and parenting education; "
@@ -331,28 +325,6 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
                    "English selected. Parenting topics: /parenting. "
                    "Other sections are not fully translated yet."
                    if language == "en" else "Выбран русский язык.", MENU)
-        return
-
-    if text in {"/language", "/lang", "🌐 Язык / Language"}:
-        await send(client, token, chat_id,
-                   "Выберите язык / Choose language: /lang_ru — Русский, /lang_en — English.",
-                   MENU)
-        return
-
-    if text in {"/lang_ru", "/lang_en"}:
-        locale = "en" if text == "/lang_en" else "ru"
-        with sqlite3.connect(DB_PATH) as conn:
-            conn.execute(
-                "INSERT INTO user_locale(telegram_user_id, locale) VALUES (?, ?) "
-                "ON CONFLICT(telegram_user_id) DO UPDATE SET locale=excluded.locale",
-                (user_id, locale))
-        set_state(user_id, "menu")
-        await send(client, token, chat_id,
-                   "Language set to English. The English-language parenting library is available "
-                   "with /parenting_en. Other bot flows are being translated."
-                   if locale == "en" else
-                   "Выбран русский язык. Открой /parenting для справочника.",
-                   MENU)
         return
 
     if text in {"/parenting_en", "/parenting_en_all"}:

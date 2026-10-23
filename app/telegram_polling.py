@@ -334,8 +334,8 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
                 await send(client, token, chat_id, topic, MENU)
         else:
             await send(client, token, chat_id,
-                       "Parenting and developmental psychology topics:\\n\\n" +
-                       "\\n".join(f"{i+1}. /parenting_en_{i+1}" for i in range(len(TOPICS_EN))),
+                       "Parenting and developmental psychology topics:\n\n" +
+                       "\n".join(f"{i+1}. /parenting_en_{i+1}" for i in range(len(TOPICS_EN))),
                        MENU)
         return
 
@@ -393,8 +393,8 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
 
     if text in {"👨‍👩‍👧 Родительство", "/parenting"}:
         lang = get_language(DB_PATH, user_id)
-        options = "\\n".join(f"• {topic.key} — {english_topic(topic.key).split(chr(10))[0] if lang == 'en' else topic.title}" for topic in TOPICS)
-        intro = ("📚 Parenting and child development. Choose /parenting TOPIC or /parenting_all.\\n\\n" if lang == "en" else "📚 Возрастная психология и родительство. Выбери /parenting ТЕМА или /parenting_all.\\n\\n")
+        options = "\n".join(f"• {topic.key} — {english_topic(topic.key).split(chr(10))[0] if lang == 'en' else topic.title}" for topic in TOPICS)
+        intro = ("📚 Parenting and child development. Choose /parenting TOPIC or /parenting_all.\n\n" if lang == "en" else "📚 Возрастная психология и родительство. Выбери /parenting ТЕМА или /parenting_all.\n\n")
         await send(client, token, chat_id, intro + options, MENU)
         return
 
@@ -414,7 +414,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
                        "Тема не найдена. Напиши /parenting для списка.", MENU)
         else:
             await send(client, token, chat_id,
-                       "\\n\\n".join(english_topic(topic.key) if get_language(DB_PATH, user_id) == "en"
+                       "\n\n".join(english_topic(topic.key) if get_language(DB_PATH, user_id) == "en"
                                      else format_topic(topic) for topic in topics[:3]), MENU)
         return
 
@@ -453,7 +453,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             lines.append(f"Средняя оценка выбранных сфер: {mean:.1f}/10 "
                          "(описательная величина, не показатель психологического здоровья).")
         if career:
-            lines.append("\\nРефлексия навыков и интересов:")
+            lines.append("\nРефлексия навыков и интересов:")
             lines.append(f"• Интерес: {career[0]}")
             lines.append(f"• Навык или опыт: {career[1]}")
             lines.append(f"• Эксперимент: {career[2]}")
@@ -504,12 +504,12 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         if not scores:
             await send(client, token, chat_id, "Сначала добавь хотя бы одну оценку в колесе баланса.", MENU)
             return
-        options_text = "\\n".join(f"• {name}: {score}/10" for name, score in scores)
+        options_text = "\n".join(f"• {name}: {score}/10" for name, score in scores)
         set_state(user_id, "wheel_action_sphere")
         await send(client, token, chat_id,
                    "Выбери одну сферу, в которой хочешь сделать небольшой шаг. "
-                   "Напиши её название точно как в списке:\\n" + options_text +
-                   "\\n\\nМожно выбрать любую сферу, не обязательно с минимальной оценкой.", MENU)
+                   "Напиши её название точно как в списке:\n" + options_text +
+                   "\n\nМожно выбрать любую сферу, не обязательно с минимальной оценкой.", MENU)
         return
 
     if text == "📊 Мои оценки":
@@ -841,7 +841,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
                          "action=excluded.action, updated_at=CURRENT_TIMESTAMP", (user_id, sphere, action))
         set_state(user_id, "menu")
         await send(client, token, chat_id,
-                   f"Твой выбранный шаг для «{sphere}»: {action}\\n\\n"
+                   f"Твой выбранный шаг для «{sphere}»: {action}\n\n"
                    "Это твоё решение, а не предписание. При необходимости можешь изменить его через «🎯 Следующий шаг».", MENU)
         return
 

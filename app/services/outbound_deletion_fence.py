@@ -39,6 +39,13 @@ def is_delivery_blocked(conn: sqlite3.Connection, user_id: str, *, now: int | No
     """Check inside the SAME BEGIN IMMEDIATE transaction as reservation."""
     ensure_deletion_fence(conn)
     current_time = int(time.time()) if now is None else now
+    # Opportunistically purge this user's marker once its retention window
+    # has ended, even if periodic maintenance has not yet run.
+    conn.execute(
+        "DELETE FROM outbound_deletion_fence "
+        "WHERE telegram_user_id=? AND expires_at<=?",
+        (user_id, current_time),
+    )
     return conn.execute(
         "SELECT 1 FROM outbound_deletion_fence "
         "WHERE telegram_user_id=? AND expires_at>?",

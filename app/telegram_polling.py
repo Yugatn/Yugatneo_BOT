@@ -33,7 +33,7 @@ MENU = {
         [{"text": "🎯 Следующий шаг"}, {"text": "✅ Отметить выполнение"}],
         [{"text": "📈 История колеса"}, {"text": "📄 Мой отчёт"}],
         [{"text": "💬 Рефлексия"}, {"text": "🧠 Выбрать подход"}],
-        [{"text": "📚 Вопросы"}],
+        [{"text": "📚 Вопросы"}, {"text": "🎓 Навыки и профессии"}],
         [{"text": "🌿 Диалог по ответам"}],
         [{"text": "🧩 Настроить вопросы"}, {"text": "⚙️ Удобство диалога"}],
         [{"text": "❔ Помощь"}],
@@ -188,6 +188,15 @@ def init_db() -> None:
             )
         """)
         conn.execute("""
+            CREATE TABLE IF NOT EXISTS career_reflection (
+                telegram_user_id TEXT PRIMARY KEY,
+                interest TEXT NOT NULL,
+                skill TEXT NOT NULL,
+                next_experiment TEXT NOT NULL,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        conn.execute("""
             CREATE TABLE IF NOT EXISTS bot_state (
                 telegram_user_id TEXT PRIMARY KEY,
                 mode TEXT NOT NULL,
@@ -270,7 +279,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
 
     if text in {"/delete_my_data", "🗑 Удалить мои данные"}:
         with sqlite3.connect(DB_PATH) as conn:
-            for table in ("wheel_scores", "wheel_score_history", "wheel_actions", "wheel_action_history", "bot_state", "dialogue_preferences"):
+            for table in ("wheel_scores", "wheel_score_history", "wheel_actions", "wheel_action_history", "career_reflection", "bot_state", "dialogue_preferences"):
                 conn.execute(f"DELETE FROM {table} WHERE telegram_user_id=?", (user_id,))
         try:
             from app.services.diagnostic_flow import clear_diagnostic
@@ -305,7 +314,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         return
 
     if text == "❔ Помощь" or text == "/help":
-        await send(client, token, chat_id, "Команды: /start — меню; /report — персональная сводка; /approaches — выбрать психологический подход; /next_step — выбрать действие; /done — отметить выполнение; /wheel_history — история оценок; /questions — библиотека вопросов; /skip — пропустить вопрос; /cancel — остановить сценарий; /delete_my_data — удалить локальные данные. Оценки колеса субъективны и не являются диагностикой.", MENU)
+        await send(client, token, chat_id, "Команды: /start — меню; /career — рефлексия навыков; /report — персональная сводка; /approaches — выбрать психологический подход; /next_step — выбрать действие; /done — отметить выполнение; /wheel_history — история оценок; /questions — библиотека вопросов; /skip — пропустить вопрос; /cancel — остановить сценарий; /delete_my_data — удалить локальные данные. Оценки колеса субъективны и не являются диагностикой.", MENU)
         return
 
     if text == "🧭 Колесо баланса":
@@ -319,6 +328,14 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         )
         return
 
+    if text in {"🎓 Навыки и профессии", "/career"}:
+        set_state(user_id, "career_interest")
+        await send(client, token, chat_id,
+                   "Какая деятельность тебе интересна? Например, создание игр, рисование, "
+                   "видеомонтаж, помощь людям или исследования. Можно не знать будущую профессию. "
+                   "Ответы добровольны, /cancel — выход.", MENU)
+        return
+
     if text in {"📄 Мой отчёт", "/report"}:
         scores = get_scores(user_id)
         with sqlite3.connect(DB_PATH) as conn:
@@ -329,7 +346,11 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
                 "SELECT sphere, action, completed_at FROM wheel_action_history "
                 "WHERE telegram_user_id=? ORDER BY id DESC LIMIT 5",
                 (user_id,)).fetchall()
-        if not scores and not active and not completed:
+        with sqlite3.connect(DB_PATH) as conn:
+            career = conn.execute(
+                "SELECT interest, skill, next_experiment FROM career_reflection "
+                "WHERE telegram_user_id=?", (user_id,)).fetchone()
+        if not scores and not active and not completed and not career:
             await send(client, token, chat_id,
                        "Для отчёта пока недостаточно данных. Начни с колеса баланса или выбери следующий шаг.", MENU)
             return
@@ -341,6 +362,11 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             mean = sum(score for _, score in scores) / len(scores)
             lines.append(f"Средняя оценка выбранных сфер: {mean:.1f}/10 "
                          "(описательная величина, не показатель психологического здоровья).")
+        if career:
+            lines.append("\\nРефлексия навыков и интересов:")
+            lines.append(f"• Интерес: {career[0]}")
+            lines.append(f"• Навык или опыт: {career[1]}")
+            lines.append(f"• Эксперимент: {career[2]}")
         if active:
             lines.append(f"\nВыбранное действие: {active[0]} — {active[1]}")
         if completed:
@@ -612,6 +638,44 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
                        f"Вопрос {index + 1}/{len(eligible)}\n\n"
                        + adapt_question(eligible[index].text, read_prefs(user_id))
                        + "\n\nОтвет не сохраняется. /skip — следующий, /cancel — завершить.")
+        return
+
+    if mode == "career_interest":
+        if len(text) > 300:
+            await send(client, token, chat_id, "Пожалуйста, сократи ответ до 300 символов.", MENU)
+            return
+        set_state(user_id, "career_skill", text)
+        await send(client, token, chat_id,
+                   "Что у тебя уже получается или чему ты пробовал учиться в этой области? "
+                   "Даже небольшой опыт считается. Можно ответить «пока не знаю».", MENU)
+        return
+
+    if mode == "career_skill":
+        if len(text) > 300:
+            await send(client, token, chat_id, "Пожалуйста, сократи ответ до 300 символов.", MENU)
+            return
+        set_state(user_id, "career_experiment")
+        with sqlite3.connect(DB_PATH) as conn:
+            conn.execute("INSERT INTO career_reflection(telegram_user_id, interest, skill, next_experiment) "
+                         "VALUES (?, ?, ?, '') ON CONFLICT(telegram_user_id) DO UPDATE SET "
+                         "interest=excluded.interest, skill=excluded.skill, next_experiment=''",
+                         (user_id, sphere or "", text))
+        await send(client, token, chat_id,
+                   "Какой маленький практический эксперимент поможет проверить этот интерес? "
+                   "Например, сделать прототип игры или смонтировать короткое видео.", MENU)
+        return
+
+    if mode == "career_experiment":
+        if len(text) > 300:
+            await send(client, token, chat_id, "Пожалуйста, сократи ответ до 300 символов.", MENU)
+            return
+        with sqlite3.connect(DB_PATH) as conn:
+            conn.execute("UPDATE career_reflection SET next_experiment=?, updated_at=CURRENT_TIMESTAMP "
+                         "WHERE telegram_user_id=?", (text, user_id))
+        set_state(user_id, "menu")
+        await send(client, token, chat_id,
+                   "Рефлексия сохранена. Открой «📄 Мой отчёт», чтобы увидеть свои интересы, "
+                   "навыки и выбранный эксперимент. Это не профессиональный диагноз.", MENU)
         return
 
     if mode == "approach_select":

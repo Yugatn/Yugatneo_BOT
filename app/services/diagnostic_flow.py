@@ -16,6 +16,7 @@ from app.core.models import Question
 from app.services.catalog import load_questions
 from app.services.diagnostic import DiagnosticProfile, prioritize_questions
 from app.services.sqlite_security import secure_sqlite_path, secure_sqlite_sidecars
+from app.services.diagnostic_encryption import encrypt_diagnostic_json, decrypt_diagnostic_json
 
 STEPS = ["age", "goal", "distress", "style", "temperament", "gender", "psychotype"]
 GOAL_LABELS = {
@@ -88,7 +89,7 @@ def _read(channel: str, external_user_id: str) -> dict[str, Any] | None:
             conn.execute("DELETE FROM diagnostic_sessions WHERE subject_key=?", (key,))
             conn.commit()
             return None
-        return {"step_index": row[0], "answers": json.loads(row[1]), "completed": bool(row[2])}
+        return {"step_index": row[0], "answers": json.loads(decrypt_diagnostic_json(row[1])), "completed": bool(row[2])}
     finally:
         conn.close()
 
@@ -101,7 +102,7 @@ def _write(channel: str, external_user_id: str, step_index: int, answers: dict[s
                VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
                ON CONFLICT(subject_key) DO UPDATE SET step_index=excluded.step_index,
                answers_json=excluded.answers_json, completed=excluded.completed, updated_at=CURRENT_TIMESTAMP""",
-            (_subject_key(channel, external_user_id), step_index, json.dumps(answers, ensure_ascii=False), int(completed)),
+            (_subject_key(channel, external_user_id), step_index, encrypt_diagnostic_json(json.dumps(answers, ensure_ascii=False)), int(completed)),
         )
         conn.commit()
     finally:

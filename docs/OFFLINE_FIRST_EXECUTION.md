@@ -15,16 +15,20 @@ public database, or production user.
 - [x] Check report encryption and restore with a synthetic staging fixture
 - [x] Check outbound SQLite schema initialization on empty and existing databases
 - [x] Test Telegram API error redaction for failed HTTP and malformed responses; full audit pending
-- [ ] Exercise restart, quarantine and operator recovery offline
+- [x] Exercise restart, quarantine and operator recovery offline (existing CI regression tests)
 - [x] Run scheduled dependency vulnerability audit with remediation verified in CI
-- [ ] Run application source static security scan and review findings
+- [x] Run Bandit medium/high-confidence application source scan; remediate three findings
 - [x] Produce operator runbook with measurable pass/fail acceptance
+- [ ] Resolve user deletion vs newly reserved in-flight outbound actions across processes
+- [ ] Independently review security, privacy and log-sanitization evidence
 
 The synthetic acceptance runner is now part of Tests CI on Python 3.11 and 3.12.
 A scheduled/on-demand dependency security audit is also active. The initial
 scan identified vulnerable older pytest/cryptography constraints; these were
-raised and the audit passed on commit f35e558. Dependency vulnerability
-scanning does not replace a source code security assessment.
+raised and the audit passed on commit f35e558. A Bandit source scan now runs on application code changes; its initial three
+medium-confidence findings were addressed by a localhost-only default bind
+and literal, allowlisted SQL statements. These automated checks still do not
+replace a human security assessment.
 Remaining P0 risks include in-flight deletion coordination and independent
 security review; a green offline test does not close those risks.
 

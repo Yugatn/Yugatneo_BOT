@@ -26,6 +26,7 @@ from app.services.parenting_index import init_index, search_index
 from app.services.language_preferences import get_language, set_language, english_topic, ensure_language_table
 from app.services.interface_i18n import tr
 from app.services.report_formatter import build_report
+from app.services.telegram_text import split_telegram_text
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -266,10 +267,12 @@ async def api(client: httpx.AsyncClient, token: str, method: str, payload: dict[
 
 
 async def send(client: httpx.AsyncClient, token: str, chat_id: int, text: str, keyboard: dict | None = MENU) -> None:
-    payload: dict[str, Any] = {"chat_id": chat_id, "text": text[:4000]}
-    if keyboard is not None:
-        payload["reply_markup"] = keyboard
-    await api(client, token, "sendMessage", payload)
+    parts = split_telegram_text(text)
+    for index, part in enumerate(parts):
+        payload: dict[str, Any] = {"chat_id": chat_id, "text": part}
+        if keyboard is not None and index == len(parts) - 1:
+            payload["reply_markup"] = keyboard
+        await api(client, token, "sendMessage", payload)
 
 
 async def handle_message(client: httpx.AsyncClient, token: str, message: dict[str, Any]) -> None:
@@ -449,7 +452,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
                 "SELECT interest, skill, next_experiment FROM career_reflection "
                 "WHERE telegram_user_id=?", (user_id,)).fetchone()
         report = build_report(get_language(DB_PATH, user_id), scores, career, active, completed)
-        await send(client, token, chat_id, report[:4000], MENU)
+        await send(client, token, chat_id, report, MENU)
         return
 
     if text in {"📈 История колеса", "/wheel_history"}:

@@ -28,6 +28,7 @@ from app.services.interface_i18n import tr
 from app.services.report_formatter import build_report
 from app.services.telegram_text import split_telegram_text
 from app.services.bot_security import check_message, init_security
+from app.services.update_deduplication import claim_update
 from app.services.sqlite_security import secure_sqlite_path, secure_sqlite_sidecars
 from app.services.personal_data import delete_telegram_user_records
 from app.services.guided_reflection import Session as GuidedSession, start as start_guided, advance as guided_advance, summary as guided_summary
@@ -1154,7 +1155,7 @@ async def main() -> None:
                     # Advance the offset even on a failed handler to avoid an endless
                     # replay loop. Never log private message content.
                     try:
-                        if update.get("message"):
+                        if update.get("message") and claim_update(DB_PATH, update["update_id"]):
                             await handle_message(client, token, update["message"])
                     except Exception:
                         log.error("Telegram update processing failed; update skipped (details redacted)")

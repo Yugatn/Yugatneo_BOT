@@ -108,6 +108,30 @@ def run_scenarios() -> tuple[ScenarioResult, ...]:
             not audit.passed and "unencrypted_reflection_detected" in audit.findings,
             "Unencrypted reflection data must be detected without disclosure")
 
+    with tempfile.TemporaryDirectory() as tmp:
+        db_path = Path(tmp) / "privacy-clean.sqlite"
+        with sqlite3.connect(db_path) as conn:
+            ensure_table(conn)
+            conn.executemany(
+                "INSERT INTO guided_reflection_reports "
+                "(telegram_user_id, encrypted_summary) VALUES (?, ?)",
+                [("a", "fernet:v1:test-a"), ("b", "fernet:v1:test-b")],
+            )
+        from app.services.personal_data import delete_telegram_user_records
+        deleted = delete_telegram_user_records(db_path, "a")
+        with sqlite3.connect(db_path) as conn:
+            a_count = conn.execute(
+                "SELECT COUNT(*) FROM guided_reflection_reports WHERE telegram_user_id=?",
+                ("a",),
+            ).fetchone()[0]
+            b_count = conn.execute(
+                "SELECT COUNT(*) FROM guided_reflection_reports WHERE telegram_user_id=?",
+                ("b",),
+            ).fetchone()[0]
+        add("scoped_privacy_deletion",
+            deleted.get("guided_reflection_reports") == 1 and a_count == 0 and b_count == 1,
+            "Deletion must remove only the requesting user's data")
+
     return tuple(ScenarioResult(*item) for item in checks)
 
 

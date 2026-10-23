@@ -25,6 +25,7 @@ from app.services.parenting_knowledge import TOPICS, format_topic
 from app.services.parenting_index import init_index, search_index
 from app.services.language_preferences import get_language, set_language, english_topic, ensure_language_table
 from app.services.interface_i18n import tr
+from app.services.report_formatter import build_report
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -448,31 +449,8 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             career = conn.execute(
                 "SELECT interest, skill, next_experiment FROM career_reflection "
                 "WHERE telegram_user_id=?", (user_id,)).fetchone()
-        if not scores and not active and not completed and not career:
-            await send(client, token, chat_id,
-                       "Для отчёта пока недостаточно данных. Начни с колеса баланса или выбери следующий шаг.", MENU)
-            return
-        lines = ["📄 ТВОЙ ОТЧЁТ О САМООЦЕНКЕ",
-                 "Это сводка твоих собственных записей, а не психологический диагноз."]
-        if scores:
-            lines.append("\nТекущие оценки:")
-            lines.extend(f"• {name}: {score}/10" for name, score in scores)
-            mean = sum(score for _, score in scores) / len(scores)
-            lines.append(f"Средняя оценка выбранных сфер: {mean:.1f}/10 "
-                         "(описательная величина, не показатель психологического здоровья).")
-        if career:
-            lines.append("\nРефлексия навыков и интересов:")
-            lines.append(f"• Интерес: {career[0]}")
-            lines.append(f"• Навык или опыт: {career[1]}")
-            lines.append(f"• Эксперимент: {career[2]}")
-        if active:
-            lines.append(f"\nВыбранное действие: {active[0]} — {active[1]}")
-        if completed:
-            lines.append("\nПоследние отмеченные достижения:")
-            lines.extend(f"• {sphere}: {action} ({date})" for sphere, action, date in completed)
-        lines.append("\nДля продолжения можешь пересмотреть оценки, выбрать одно небольшое действие "
-                     "или воспользоваться упражнениями по выбранному подходу.")
-        await send(client, token, chat_id, "\n".join(lines), MENU)
+        report = build_report(get_language(DB_PATH, user_id), scores, career, active, completed)
+        await send(client, token, chat_id, report[:4000], MENU)
         return
 
     if text in {"📈 История колеса", "/wheel_history"}:
@@ -773,12 +751,10 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
 
     if mode == "career_interest":
         if len(text) > 300:
-            await send(client, token, chat_id, "Пожалуйста, сократи ответ до 300 символов.", MENU)
+            await send(client, token, chat_id, tr(get_language(DB_PATH, user_id), "too_long"), MENU)
             return
         set_state(user_id, "career_skill", text)
-        await send(client, token, chat_id,
-                   "Что у тебя уже получается или чему ты пробовал учиться в этой области? "
-                   "Даже небольшой опыт считается. Можно ответить «пока не знаю».", MENU)
+        await send(client, token, chat_id, tr(get_language(DB_PATH, user_id), "career_skill"), MENU)
         return
 
     if mode == "career_skill":
@@ -791,9 +767,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
                          "VALUES (?, ?, ?, '') ON CONFLICT(telegram_user_id) DO UPDATE SET "
                          "interest=excluded.interest, skill=excluded.skill, next_experiment=''",
                          (user_id, sphere or "", text))
-        await send(client, token, chat_id,
-                   "Какой маленький практический эксперимент поможет проверить этот интерес? "
-                   "Например, сделать прототип игры или смонтировать короткое видео.", MENU)
+        await send(client, token, chat_id, tr(get_language(DB_PATH, user_id), "career_experiment"), MENU)
         return
 
     if mode == "career_experiment":
@@ -804,9 +778,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             conn.execute("UPDATE career_reflection SET next_experiment=?, updated_at=CURRENT_TIMESTAMP "
                          "WHERE telegram_user_id=?", (text, user_id))
         set_state(user_id, "menu")
-        await send(client, token, chat_id,
-                   "Рефлексия сохранена. Открой «📄 Мой отчёт», чтобы увидеть свои интересы, "
-                   "навыки и выбранный эксперимент. Это не профессиональный диагноз.", MENU)
+        await send(client, token, chat_id, tr(get_language(DB_PATH, user_id), "career_saved"), MENU)
         return
 
     if mode == "approach_select":

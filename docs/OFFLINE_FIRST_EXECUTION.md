@@ -10,16 +10,17 @@ public database, or production user.
 - [x] Scoped outbound receipts and account deletion tests
 - [x] Tests for concurrent reservations and cancelled requests
 - [x] Explicit opt-in experimental /start integration
-- [ ] Test failure before remote acceptance and repeated delivery
-- [ ] Test malformed updates and boundary cases for the /start guard
-- [ ] Check report encryption and restore with a synthetic staging fixture
-- [ ] Check SQLite migrations on empty and existing databases
-- [ ] Audit sensitive logs and error messages
+- [x] Test failure before remote acceptance and repeated delivery
+- [x] Test malformed updates and boundary cases for the /start guard
+- [x] Check report encryption and restore with a synthetic staging fixture
+- [x] Check outbound SQLite schema initialization on empty and existing databases
+- [x] Test Telegram API error redaction for failed HTTP and malformed responses; full audit pending
 - [ ] Exercise restart, quarantine and operator recovery offline
 - [ ] Run dependency and static security scans in CI
-- [ ] Produce operator runbook with measurable pass/fail acceptance
+- [x] Produce operator runbook with measurable pass/fail acceptance
 
-## P1 — infrastructure-dependent tasks (after P0)
+The synthetic acceptance runner is now part of Tests CI on Python 3.11 and 3.12.
+Remaining P0 risks include in-flight deletion coordination and independent\nsecurity review; a green offline test does not close those risks.\n\n## P1 — infrastructure-dependent tasks (after P0)
 
 - [ ] Create isolated staging Telegram bot credentials
 - [ ] Configure one polling worker on a protected host

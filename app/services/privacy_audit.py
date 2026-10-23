@@ -47,3 +47,31 @@ def audit_reflection_storage(db_path) -> PrivacyAudit:
         if "guided_reflection_reports" not in PERSONAL_TABLES:
             issues.append("reflection_missing_from_deletion_allowlist")
     return PrivacyAudit(not issues, tuple(issues), checked)
+
+
+def audit_report_decryption(db_path):
+    """Count records unreadable with the configured key, without returning data."""
+    from app.services.diagnostic_encryption import (
+        decrypt_diagnostic_json, EncryptionConfigurationError, PREFIX,
+    )
+    checked = 0
+    failures = 0
+    with sqlite3.connect(db_path) as conn:
+        present = conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' "
+            "AND name='guided_reflection_reports'"
+        ).fetchone()
+        if not present:
+            return {"checked": 0, "failures": 0, "passed": True}
+        for (payload,) in conn.execute(
+            "SELECT encrypted_summary FROM guided_reflection_reports"
+        ):
+            checked += 1
+            try:
+                if not isinstance(payload, str) or not payload.startswith(PREFIX):
+                    failures += 1
+                else:
+                    decrypt_diagnostic_json(payload)
+            except EncryptionConfigurationError:
+                failures += 1
+    return {"checked": checked, "failures": failures, "passed": failures == 0}

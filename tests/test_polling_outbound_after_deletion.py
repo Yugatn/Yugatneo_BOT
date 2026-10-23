@@ -31,7 +31,7 @@ def test_flagged_private_start_does_not_send_after_deletion(tmp_path, monkeypatc
         assert outgoing == []
         await polling.handle_update_message(
             None, "fake-token", 81,
-            {"from": {"id": 12}, "chat": {"id": 12, "type": "private"}, "text": "/start"}
+            {"from": {"id": 12}, "chat": {"id": 12, "type": "private"}, "text": "/start", "date": int(time.time())}
         )
 
     asyncio.run(scenario())

@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     openai_api_key: str | None = None
     openai_model: str | None = None
     telegram_bot_token: str | None = None
+    chat_control_api_key: str | None = None
     meta_verify_token: str | None = None
     meta_access_token: str | None = None
     meta_app_secret: str | None = None

@@ -260,12 +260,19 @@ def get_scores(user_id: str) -> list[tuple[str, int]]:
 
 
 async def api(client: httpx.AsyncClient, token: str, method: str, payload: dict[str, Any] | None = None) -> Any:
-    response = await client.post(f"https://api.telegram.org/bot{token}/{method}", json=payload or {})
-    response.raise_for_status()
-    data = response.json()
-    if not data.get("ok"):
-        raise RuntimeError(f"Telegram API {method} failed")
-    return data["result"]
+    # Telegram embeds the bot token in its API URL. Never expose HTTP exception
+    # messages or tracebacks: they may include the full request URL and token.
+    try:
+        response = await client.post(
+            f"https://api.telegram.org/bot{token}/{method}", json=payload or {}
+        )
+        response.raise_for_status()
+        data = response.json()
+        if not data.get("ok"):
+            raise RuntimeError("Telegram returned an unsuccessful response")
+        return data["result"]
+    except (httpx.HTTPError, ValueError, KeyError, RuntimeError):
+        raise RuntimeError(f"Telegram API {method} failed (details redacted)") from None
 
 
 async def send(client: httpx.AsyncClient, token: str, chat_id: int, text: str, keyboard: dict | None = MENU) -> None:
@@ -321,7 +328,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             from app.services.diagnostic_flow import clear_diagnostic
             clear_diagnostic("telegram", user_id)
         except Exception:
-            log.exception("Failed to clear diagnostic data")
+            log.error("Failed to clear diagnostic data (details redacted)")
             await send(client, token, chat_id,
                        "Часть данных не удалось удалить. Обратись к администратору.",
                        MENU)
@@ -899,7 +906,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             reply = await respond(incoming)
             await send(client, token, chat_id, reply.text, MENU)
         except Exception:
-            log.exception("Reflection response failed")
+            log.error("Reflection response failed (details redacted)")
             await send(client, token, chat_id, "Не удалось подготовить ответ. Попробуй ещё раз чуть позже.", MENU)
         return
 
@@ -939,11 +946,11 @@ async def main() -> None:
                         if update.get("message"):
                             await handle_message(client, token, update["message"])
                     except Exception:
-                        log.exception("Telegram update processing failed; update skipped")
+                        log.error("Telegram update processing failed; update skipped (details redacted)")
                     finally:
                         offset = update["update_id"] + 1
             except (httpx.HTTPError, RuntimeError):
-                log.exception("Telegram polling error; retrying in 3 seconds")
+                log.error("Telegram polling error; retrying in 3 seconds (details redacted)")
                 await asyncio.sleep(3)
 
 

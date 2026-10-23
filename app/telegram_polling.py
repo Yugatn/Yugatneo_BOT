@@ -23,6 +23,7 @@ from app.services.safety import classify_crisis_message, crisis_response
 from app.services.diagnostic_flow import handle_diagnostic_message
 from app.services.parenting_knowledge import TOPICS, format_topic
 from app.services.parenting_index import init_index, search_index
+from app.services.language_preferences import get_language, set_language, english_topic
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -39,7 +40,7 @@ MENU = {
         [{"text": "🛡 Возрастные настройки"}, {"text": "👨‍👩‍👧 Родительство"}],
         [{"text": "🌿 Диалог по ответам"}],
         [{"text": "🧩 Настроить вопросы"}, {"text": "⚙️ Удобство диалога"}],
-        [{"text": "❔ Помощь"}],
+        [{"text": "🌐 Язык / Language"}, {"text": "❔ Помощь"}],
     ],
     "resize_keyboard": True,
 }
@@ -289,7 +290,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
 
     if text in {"/delete_my_data", "🗑 Удалить мои данные"}:
         with sqlite3.connect(DB_PATH) as conn:
-            for table in ("wheel_scores", "wheel_score_history", "wheel_actions", "wheel_action_history", "career_reflection", "age_access", "bot_state", "dialogue_preferences"):
+            for table in ("wheel_scores", "wheel_score_history", "wheel_actions", "wheel_action_history", "career_reflection", "age_access", "bot_state", "dialogue_preferences", "user_language"):
                 conn.execute(f"DELETE FROM {table} WHERE telegram_user_id=?", (user_id,))
         try:
             from app.services.diagnostic_flow import clear_diagnostic
@@ -304,6 +305,23 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
                    "Локальные оценки, предпочтения и настройки диагностики удалены. "
                    "История сообщений в Telegram и возможные данные внешнего ИИ "
                    "не удаляются этой командой.", MENU)
+        return
+
+    if text in {"/language", "🌐 Язык / Language"}:
+        await send(client, token, chat_id,
+                   "Выберите язык / Choose language: /lang_ru — Русский; /lang_en — English. "
+                   "English currently covers language controls and parenting education; "
+                   "other coaching flows are still in Russian.", MENU)
+        return
+
+    if text in {"/lang_ru", "/lang_en"}:
+        language = "en" if text == "/lang_en" else "ru"
+        set_language(DB_PATH, user_id, language)
+        set_state(user_id, "menu")
+        await send(client, token, chat_id,
+                   "English selected. Parenting topics: /parenting. "
+                   "Other sections are not fully translated yet."
+                   if language == "en" else "Выбран русский язык.", MENU)
         return
 
     if text.lower() in CANCEL_WORDS:
@@ -339,7 +357,8 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         return
 
     if text in {"👨‍👩‍👧 Родительство", "/parenting"}:
-        options = "\\n".join(f"• {topic.key} — {topic.title}" for topic in TOPICS)
+        lang = get_language(DB_PATH, user_id)
+        options = "\\n".join(f"• {topic.key} — {english_topic(topic.key).split(chr(10))[0] if lang == 'en' else topic.title}" for topic in TOPICS)
         await send(client, token, chat_id,
                    "📚 Возрастная психология и родительство\\n"
                    "Выбери тему командой /parenting ТЕМА или напиши /parenting_all.\\n\\n"
@@ -349,8 +368,10 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         return
 
     if text == "/parenting_all":
+        lang = get_language(DB_PATH, user_id)
         for topic in TOPICS:
-            await send(client, token, chat_id, format_topic(topic), MENU)
+            await send(client, token, chat_id,
+                       english_topic(topic.key) if lang == "en" else format_topic(topic), MENU)
         return
 
     if text.startswith("/parenting "):
@@ -362,7 +383,8 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
                        "Тема не найдена. Напиши /parenting для списка.", MENU)
         else:
             await send(client, token, chat_id,
-                       "\\n\\n".join(format_topic(topic) for topic in topics[:3]), MENU)
+                       "\\n\\n".join(english_topic(topic.key) if get_language(DB_PATH, user_id) == "en"
+                                     else format_topic(topic) for topic in topics[:3]), MENU)
         return
 
     if text in {"🎓 Навыки и профессии", "/career"}:

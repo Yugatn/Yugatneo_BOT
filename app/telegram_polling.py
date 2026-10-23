@@ -32,6 +32,7 @@ from app.services.sqlite_security import secure_sqlite_path, secure_sqlite_sidec
 from app.services.personal_data import delete_telegram_user_records
 from app.services.diagnostic_encryption import encrypt_diagnostic_json, decrypt_diagnostic_json
 from app.services.startup_security import validate_encryption_startup
+from app.services.wheel_ray_catalog import catalog, normalize_ray_title
 from app.services.coaching_session import Session as CoachingSession, Stage as CoachingStage, advance as coaching_advance
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -489,6 +490,15 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
 
     if text == "❔ Помощь" or text == "/help":
         await send(client, token, chat_id, "Команды: /start — меню; /language — язык; /parenting_en — English parenting; /parenting — цифровая среда и родительство; /age — возрастная настройка; /career — рефлексия навыков; /report — персональная сводка; /approaches — выбрать психологический подход; /next_step — выбрать действие; /done — отметить выполнение; /wheel_history — история оценок; /questions — библиотека вопросов; /skip — пропустить вопрос; /cancel — остановить сценарий; /delete_my_data — удалить локальные данные. Оценки колеса субъективны и не являются диагностикой.", MENU)
+        return
+
+    if text in {"/wheel_rays", "🌈 Выбрать луч"}:
+        rays = catalog(True)
+        await send(client, token, chat_id,
+                   "Доступные направления и их составляющие:\\n"
+                   + "\\n".join("• " + ray.title + ": " + ", ".join(ray.facets) for ray in rays)
+                   + "\\n\\nЧтобы оценить направление, используй /wheel. "
+                     "Можно ввести собственное название.", MENU)
         return
 
     if text in {"🧭 Колесо баланса", "/wheel"}:
@@ -950,9 +960,11 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         return
 
     if mode == "wheel_name":
-        sphere = re.sub(r"\s+", " ", text).strip()[:80]
-        if not sphere:
-            await send(client, token, chat_id, "Напиши название сферы или /cancel.")
+        try:
+            sphere = normalize_ray_title(text)
+        except ValueError:
+            await send(client, token, chat_id,
+                       "Название луча должно содержать от 1 до 80 символов.", MENU)
             return
         set_state(user_id, "wheel_score", sphere)
         await send(client, token, chat_id, tr(get_language(DB_PATH, user_id), "wheel_score_prompt", sphere=sphere))

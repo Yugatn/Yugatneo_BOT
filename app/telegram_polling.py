@@ -32,6 +32,7 @@ from app.services.sqlite_security import secure_sqlite_path, secure_sqlite_sidec
 from app.services.personal_data import delete_telegram_user_records
 from app.services.diagnostic_encryption import encrypt_diagnostic_json, decrypt_diagnostic_json
 from app.services.startup_security import validate_encryption_startup
+from app.services.coaching_session import Session as CoachingSession, Stage as CoachingStage, advance as coaching_advance
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -49,6 +50,7 @@ MENU = {
 SUBMENUS = {
     "💬 Коучинг": [
         ["💬 Рефлексия", "🧠 Выбрать подход"],
+        ["🧭 Коучинг по шагам"],
         ["📚 Вопросы", "🌿 Диалог по ответам"],
         ["🧩 Настроить вопросы"],
     ],
@@ -72,6 +74,8 @@ def submenu_keyboard(name: str) -> dict:
             + [[{"text": "↩️ Главное меню"}]], "resize_keyboard": True}
 
 CATALOG = QuestionCatalog()
+from app.services.coaching_session import PROMPTS as COACHING_PROMPTS
+COACHING_SESSIONS: dict[str, CoachingSession] = {}
 CANCEL_WORDS = {"/cancel", "отмена", "стоп", "назад"}
 APPROACHES = {
     "Гештальт-рефлексия": "Что ты замечаешь прямо сейчас: в чувствах, телесных ощущениях и потребностях? Что остаётся незавершённым и требует внимания?",
@@ -345,6 +349,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             return
 
     if text in {"/delete_my_data", "🗑 Удалить мои данные"}:
+        COACHING_SESSIONS.pop(user_id, None)
         try:
             delete_telegram_user_records(DB_PATH, user_id)
         except (sqlite3.Error, RuntimeError, ValueError):
@@ -367,6 +372,29 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
                    "История сообщений в Telegram и возможные данные внешнего ИИ "
                    "не удаляются этой командой.", MENU)
         return
+
+    # Stateless channel adapter over the explicit-consent coaching state machine.
+    # Session answers remain in process memory only, not in SQLite.
+    if text in {"/coaching_session", "🧭 Коучинг по шагам"}:
+        COACHING_SESSIONS[user_id] = CoachingSession()
+        await send(client, token, chat_id,
+                   "Пошаговая коучинговая сессия. /cancel — отмена.\\n"
+                   + COACHING_PROMPTS[CoachingStage.CONSENT], MENU)
+        return
+    if user_id in COACHING_SESSIONS:
+        if text in {"/cancel", "отмена", "стоп", "↩️ Главное меню", "/start"}:
+            COACHING_SESSIONS.pop(user_id, None)
+            if text != "/start":
+                await send(client, token, chat_id, "Сессия отменена; ответы не сохранены.", MENU)
+                return
+        else:
+            current, prompt = coaching_advance(COACHING_SESSIONS[user_id], text)
+            if current.stage in {CoachingStage.DONE, CoachingStage.CANCELLED}:
+                COACHING_SESSIONS.pop(user_id, None)
+            else:
+                COACHING_SESSIONS[user_id] = current
+            await send(client, token, chat_id, prompt, MENU)
+            return
 
     if text in {"/menu_en", "/help_en"}:
         await send(

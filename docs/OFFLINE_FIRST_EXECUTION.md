@@ -20,7 +20,10 @@ public database, or production user.
 - [x] Run Bandit medium/high-confidence application source scan; remediate three findings
 - [x] Produce operator runbook with measurable pass/fail acceptance
 - [x] Block new experimental outbound reservations after deletion across processes for 24 hours; test concurrency and expiry
-- [ ] Review in-flight sends that were already reserved and long-delayed (>24h) replay semantics
+- [x] Reject stale or timestamp-less experimental /start updates after 23 hours
+- [x] Check active deletion fence before experimental /start handler state writes
+- [ ] Define policy for already in-flight network requests and post-deletion state writes in other flows
+- [ ] Review delayed-update policy before enabling additional outbound commands
 - [x] Document internal privacy/security risk inventory and reproducible evidence
 - [ ] Obtain independent security, privacy and clinical reviews (human sign-off)
 
@@ -31,8 +34,11 @@ raised and the audit passed on commit f35e558. A Bandit source scan now runs on 
 medium-confidence findings were addressed by a localhost-only default bind
 and literal, allowlisted SQL statements. These automated checks still do not
 replace a human security assessment.
-Remaining P0 risks include in-flight sends already reserved, deletion-fence retention, long-delayed retries, and independent
-security review; a green offline test does not close those risks.
+Remaining P0 risks include already in-flight sends, non-atomic handler writes,
+deletion-fence personal-data retention, and independent security review.
+Experimental /start replays older than 23 hours are now suppressed when the
+flag is enabled, but this does not extend to other commands. A green offline
+test does not close these risks.
 
 ## P1 — infrastructure-dependent tasks (after P0)
 

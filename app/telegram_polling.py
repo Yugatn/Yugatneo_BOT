@@ -28,6 +28,7 @@ from app.services.interface_i18n import tr
 from app.services.report_formatter import build_report
 from app.services.telegram_text import split_telegram_text
 from app.services.bot_security import check_message, init_security
+from app.services.sqlite_security import secure_sqlite_path, secure_sqlite_sidecars
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -150,6 +151,7 @@ def preference_keyboard() -> dict:
 
 
 def init_db() -> None:
+    secure_sqlite_path(DB_PATH)
     with sqlite3.connect(DB_PATH) as conn:
         ensure_language_table(conn)
         init_security(conn)
@@ -220,6 +222,7 @@ def init_db() -> None:
                 sphere TEXT
             )
         """)
+    secure_sqlite_sidecars(DB_PATH)
 
 
 def set_state(user_id: str, mode: str, sphere: str | None = None) -> None:

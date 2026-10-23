@@ -28,6 +28,7 @@ from app.services.language_preferences import get_language, set_language, englis
 from app.services.interface_i18n import tr
 from app.services.report_formatter import build_report
 from app.services.telegram_text import split_telegram_text
+from app.services.bot_security import check_message, init_security
 from app.services.telegraph_publisher import publish_public_article, TelegraphError
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -296,10 +297,17 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         await send(client, token, chat_id, crisis_response(crisis), MENU)
         return
 
+    # Crisis support and personal-data deletion bypass the anti-abuse gate.
+    if text not in {"/delete_my_data", "🗑 Удалить мои данные"}:
+        status, notice = check_message(DB_PATH, user_id, text)
+        if status != "allow":
+            await send(client, token, chat_id, notice or "Verification required.", None)
+            return
+
     if text in {"/delete_my_data", "🗑 Удалить мои данные"}:
         with sqlite3.connect(DB_PATH) as conn:
             ensure_language_table(conn)
-            for table in ("wheel_scores", "wheel_score_history", "wheel_actions", "wheel_action_history", "career_reflection", "age_access", "bot_state", "dialogue_preferences", "user_language"):
+            for table in ("wheel_scores", "wheel_score_history", "wheel_actions", "wheel_action_history", "career_reflection", "age_access", "bot_state", "dialogue_preferences", "user_language", "bot_security"):
                 conn.execute(f"DELETE FROM {table} WHERE telegram_user_id=?", (user_id,))
         try:
             from app.services.diagnostic_flow import clear_diagnostic

@@ -20,6 +20,7 @@ PERSONAL_TABLES = (
     "bot_security",
     "guided_reflection_reports",
     "reflection_save_receipts",
+    "user_outbound_delivery",
 )
 
 

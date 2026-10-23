@@ -19,6 +19,7 @@ PERSONAL_TABLES = (
     "user_language",
     "bot_security",
     "guided_reflection_reports",
+    "reflection_save_receipts",
 )
 
 

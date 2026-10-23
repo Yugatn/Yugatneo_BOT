@@ -1125,6 +1125,9 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
     await send(client, token, chat_id, "Выбери действие в меню. Если хочешь начать заново, отправь /start.", MENU)
 
 
+from app.services.async_update_dispatch import dispatch_update
+
+
 async def main() -> None:
     validate_encryption_startup()
     settings = get_settings()
@@ -1151,16 +1154,25 @@ async def main() -> None:
             try:
                 updates = await api(client, token, "getUpdates", params)
                 for update in updates:
-                    # A malformed user update must not stop the entire polling batch.
-                    # Advance the offset even on a failed handler to avoid an endless
-                    # replay loop. Never log private message content.
+                    update_id = update["update_id"]
                     try:
-                        if update.get("message") and claim_update(DB_PATH, update["update_id"]):
-                            await handle_message(client, token, update["message"])
+                        if update.get("message"):
+                            processed = await dispatch_update(
+                                DB_PATH, update_id,
+                                lambda: handle_message(client, token, update["message"]),
+                            )
+                            if not processed:
+                                # An earlier attempt still holds its lease.
+                                # Do not acknowledge this or later updates.
+                                await asyncio.sleep(3)
+                                break
+                        offset = update_id + 1
                     except Exception:
-                        log.error("Telegram update processing failed; update skipped (details redacted)")
-                    finally:
-                        offset = update["update_id"] + 1
+                        # Do not advance offset after a failed handler.
+                        # Telegram will redeliver after the processing lease.
+                        log.error("Telegram update failed; awaiting safe retry (redacted)")
+                        await asyncio.sleep(3)
+                        break
             except (httpx.HTTPError, RuntimeError):
                 log.error("Telegram polling error; retrying in 3 seconds (details redacted)")
                 await asyncio.sleep(3)

@@ -41,3 +41,7 @@ A successful CI run is not authorization to deploy.
 ## Offline restore acceptance
 
 Run the existing `verify_sqlite_backup` check against a restored staging copy before attempting to read reports. Reject any result where `passed` is false. Next run `count_unreadable_reports` with the intended encryption key and require `unreadable == 0`. An empty report table is not evidence that a key is correct; retain an encrypted test fixture in staging for positive verification. Never print summaries or identifiers in diagnostics. A passed integrity check does not imply readable encrypted data. Keep the restored database isolated from production and do not overwrite the source.
+
+## Duplicate delivery acceptance
+
+The asynchronous dispatcher must invoke a handler only once for an already completed update. A handler exception must leave the update uncompleted so it can be retried after its processing lease expires. Confirm both behaviours in CI; also conduct a separate end-to-end Telegram polling restart exercise before beta approval. Exactly-once side effects are not guaranteed for arbitrary handlers if the process crashes after side effects but before marking an update complete.

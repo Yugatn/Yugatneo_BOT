@@ -917,6 +917,13 @@ async def main() -> None:
     timeout = httpx.Timeout(40.0, connect=10.0)
     async with httpx.AsyncClient(timeout=timeout) as client:
         me = await api(client, token, "getMe")
+        webhook = await api(client, token, "getWebhookInfo")
+        if webhook.get("url"):
+            raise SystemExit(
+                "Telegram webhook is active. Polling cannot run simultaneously. "
+                "Disable the webhook explicitly in your deployment configuration; "
+                "this program will not delete it automatically."
+            )
         log.info("Polling started for @%s. Stop with Ctrl+C.", me.get("username", "bot"))
         while True:
             params: dict[str, Any] = {"timeout": 30, "allowed_updates": ["message"]}

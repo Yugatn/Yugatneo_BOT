@@ -35,7 +35,7 @@ from app.services.guided_report_storage import save_report as save_guided_report
 from app.services.reflection_action_plan import build_action_plan
 from app.services.career_questionnaires import begin_questionnaire
 from app.services.career_hypotheses import career_hypotheses
-from app.services.knowledge_index import lookup as lookup_knowledge
+from app.services.safe_answer_delivery import source_bounded_answer
 from app.services.diagnostic_encryption import encrypt_diagnostic_json, decrypt_diagnostic_json
 from app.services.startup_security import validate_encryption_startup
 from app.services.wheel_ray_catalog import catalog, normalize_ray_title
@@ -651,19 +651,8 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
 
     if text in {"/knowledge_parenting", "📖 Источники по воспитанию"}:
         lang = get_language(DB_PATH, user_id)
-        entries = lookup_knowledge("parenting", locale=lang)
-        header = ("Психообразовательные материалы с указанием типа источника. "
-                  "Теория не равнозначна клинической рекомендации."
-                  if lang == "ru" else
-                  "Psychoeducation with source categories. "
-                  "A theory is not the same as a clinical guideline.")
-        items = [
-            f"• {entry['text']}\\n"
-            f"  [{entry['evidence']}] {entry['source']}\\n"
-            f"  {entry['source_url']}"
-            for entry in entries
-        ]
-        await send(client, token, chat_id, header + "\\n\\n" + "\\n\\n".join(items), MENU)
+        delivery = source_bounded_answer("parenting", locale=lang)
+        await send(client, token, chat_id, delivery.text, MENU)
         return
 
     if text in {"👨‍👩‍👧 Родительство", "/parenting"}:

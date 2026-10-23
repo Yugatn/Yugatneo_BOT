@@ -23,6 +23,62 @@ PERSONAL_TABLES = (
     "user_outbound_delivery",
 )
 
+# Literal SQL statements: table identifiers cannot come from user input.
+_TABLE_SQL = {
+    "wheel_scores": (
+        'DELETE FROM "wheel_scores" WHERE telegram_user_id=?',
+        'SELECT COUNT(*) FROM "wheel_scores" WHERE telegram_user_id=?',
+    ),
+    "wheel_score_history": (
+        'DELETE FROM "wheel_score_history" WHERE telegram_user_id=?',
+        'SELECT COUNT(*) FROM "wheel_score_history" WHERE telegram_user_id=?',
+    ),
+    "wheel_actions": (
+        'DELETE FROM "wheel_actions" WHERE telegram_user_id=?',
+        'SELECT COUNT(*) FROM "wheel_actions" WHERE telegram_user_id=?',
+    ),
+    "wheel_action_history": (
+        'DELETE FROM "wheel_action_history" WHERE telegram_user_id=?',
+        'SELECT COUNT(*) FROM "wheel_action_history" WHERE telegram_user_id=?',
+    ),
+    "career_reflection": (
+        'DELETE FROM "career_reflection" WHERE telegram_user_id=?',
+        'SELECT COUNT(*) FROM "career_reflection" WHERE telegram_user_id=?',
+    ),
+    "age_access": (
+        'DELETE FROM "age_access" WHERE telegram_user_id=?',
+        'SELECT COUNT(*) FROM "age_access" WHERE telegram_user_id=?',
+    ),
+    "bot_state": (
+        'DELETE FROM "bot_state" WHERE telegram_user_id=?',
+        'SELECT COUNT(*) FROM "bot_state" WHERE telegram_user_id=?',
+    ),
+    "dialogue_preferences": (
+        'DELETE FROM "dialogue_preferences" WHERE telegram_user_id=?',
+        'SELECT COUNT(*) FROM "dialogue_preferences" WHERE telegram_user_id=?',
+    ),
+    "user_language": (
+        'DELETE FROM "user_language" WHERE telegram_user_id=?',
+        'SELECT COUNT(*) FROM "user_language" WHERE telegram_user_id=?',
+    ),
+    "bot_security": (
+        'DELETE FROM "bot_security" WHERE telegram_user_id=?',
+        'SELECT COUNT(*) FROM "bot_security" WHERE telegram_user_id=?',
+    ),
+    "guided_reflection_reports": (
+        'DELETE FROM "guided_reflection_reports" WHERE telegram_user_id=?',
+        'SELECT COUNT(*) FROM "guided_reflection_reports" WHERE telegram_user_id=?',
+    ),
+    "reflection_save_receipts": (
+        'DELETE FROM "reflection_save_receipts" WHERE telegram_user_id=?',
+        'SELECT COUNT(*) FROM "reflection_save_receipts" WHERE telegram_user_id=?',
+    ),
+    "user_outbound_delivery": (
+        'DELETE FROM "user_outbound_delivery" WHERE telegram_user_id=?',
+        'SELECT COUNT(*) FROM "user_outbound_delivery" WHERE telegram_user_id=?',
+    ),
+}
+
 
 def delete_telegram_user_records(db_path, user_id: str) -> dict[str, int]:
     if not user_id:
@@ -37,16 +93,12 @@ def delete_telegram_user_records(db_path, user_id: str) -> dict[str, int]:
             ).fetchone()
             if not exists:
                 continue
-            # Table identifiers come exclusively from the static allowlist.
-            cursor = conn.execute(
-                f'DELETE FROM "{table}" WHERE telegram_user_id=?', (user_id,)
-            )
+            delete_sql, _ = _TABLE_SQL[table]
+            cursor = conn.execute(delete_sql, (user_id,))
             deleted[table] = cursor.rowcount
         for table in deleted:
-            remaining = conn.execute(
-                f'SELECT COUNT(*) FROM "{table}" WHERE telegram_user_id=?',
-                (user_id,),
-            ).fetchone()[0]
+            _, count_sql = _TABLE_SQL[table]
+            remaining = conn.execute(count_sql, (user_id,)).fetchone()[0]
             if remaining:
                 raise RuntimeError("Personal data deletion verification failed")
     return deleted

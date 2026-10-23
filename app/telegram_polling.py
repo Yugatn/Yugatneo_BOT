@@ -358,6 +358,14 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
 
     if text.startswith("/start"):
         set_state(user_id, "menu")
+        if get_language(DB_PATH, user_id) == "en":
+            await send(client, token, chat_id,
+                       "Welcome to Yugatn Neo Symbiot. Choose a self-reflection or learning activity. "
+                       "You can skip any question. This bot does not diagnose or replace a professional. "
+                       "For English parenting resources, use /parenting. "
+                       "Some other activities are still available in Russian. "
+                       "Switch language with /language.", MENU)
+            return
         await send(
             client, token, chat_id,
             "Привет! Я Yugatn Neo Symbiot — помощник для коучинга, самоисследования и психообразования.\n\n"
@@ -386,12 +394,8 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
     if text in {"👨‍👩‍👧 Родительство", "/parenting"}:
         lang = get_language(DB_PATH, user_id)
         options = "\\n".join(f"• {topic.key} — {english_topic(topic.key).split(chr(10))[0] if lang == 'en' else topic.title}" for topic in TOPICS)
-        await send(client, token, chat_id,
-                   "📚 Возрастная психология и родительство\\n"
-                   "Выбери тему командой /parenting ТЕМА или напиши /parenting_all.\\n\\n"
-                   + options + "\\n\\n"
-                   "Например: /parenting conflict или /parenting toddler. "
-                   "Материалы образовательные, без постановки диагнозов.", MENU)
+        intro = ("📚 Parenting and child development. Choose /parenting TOPIC or /parenting_all.\\n\\n" if lang == "en" else "📚 Возрастная психология и родительство. Выбери /parenting ТЕМА или /parenting_all.\\n\\n")
+        await send(client, token, chat_id, intro + options, MENU)
         return
 
     if text == "/parenting_all":

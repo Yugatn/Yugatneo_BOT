@@ -32,6 +32,7 @@ def test_coaching_action_encrypted_and_report_readable(tmp_path, monkeypatch):
         )
 
     async def run():
+        bot.save_score("81", "Creativity", 7)
         await message("/next_step")
         await message("Creativity")
         await message("Draw a new picture every day")

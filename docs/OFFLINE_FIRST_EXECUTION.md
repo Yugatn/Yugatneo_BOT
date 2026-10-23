@@ -16,10 +16,15 @@ public database, or production user.
 - [x] Check outbound SQLite schema initialization on empty and existing databases
 - [x] Test Telegram API error redaction for failed HTTP and malformed responses; full audit pending
 - [ ] Exercise restart, quarantine and operator recovery offline
-- [ ] Run dependency and static security scans in CI
+- [x] Run scheduled dependency vulnerability audit with remediation verified in CI
+- [ ] Run application source static security scan and review findings
 - [x] Produce operator runbook with measurable pass/fail acceptance
 
 The synthetic acceptance runner is now part of Tests CI on Python 3.11 and 3.12.
+A scheduled/on-demand dependency security audit is also active. The initial
+scan identified vulnerable older pytest/cryptography constraints; these were
+raised and the audit passed on commit f35e558. Dependency vulnerability
+scanning does not replace a source code security assessment.
 Remaining P0 risks include in-flight deletion coordination and independent\nsecurity review; a green offline test does not close those risks.\n\n## P1 — infrastructure-dependent tasks (after P0)
 
 - [ ] Create isolated staging Telegram bot credentials

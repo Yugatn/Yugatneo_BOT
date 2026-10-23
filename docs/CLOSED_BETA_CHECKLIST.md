@@ -37,3 +37,7 @@ The `environment_preflight` helper checks configuration presence, Fernet key
 format and filesystem access. It does not verify whether the key can decrypt
 existing records, Telegram connectivity, clinical safety, or production security.
 A successful CI run is not authorization to deploy.
+
+## Offline restore acceptance
+
+Run the existing `verify_sqlite_backup` check against a restored staging copy before attempting to read reports. Reject any result where `passed` is false. Next run `count_unreadable_reports` with the intended encryption key and require `unreadable == 0`. An empty report table is not evidence that a key is correct; retain an encrypted test fixture in staging for positive verification. Never print summaries or identifiers in diagnostics. A passed integrity check does not imply readable encrypted data. Keep the restored database isolated from production and do not overwrite the source.

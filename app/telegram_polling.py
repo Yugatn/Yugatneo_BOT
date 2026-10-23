@@ -29,6 +29,7 @@ from app.services.report_formatter import build_report
 from app.services.telegram_text import split_telegram_text
 from app.services.bot_security import check_message, init_security
 from app.services.sqlite_security import secure_sqlite_path, secure_sqlite_sidecars
+from app.services.personal_data import delete_telegram_user_records
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -323,10 +324,14 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             return
 
     if text in {"/delete_my_data", "🗑 Удалить мои данные"}:
-        with sqlite3.connect(DB_PATH) as conn:
-            ensure_language_table(conn)
-            for table in ("wheel_scores", "wheel_score_history", "wheel_actions", "wheel_action_history", "career_reflection", "age_access", "bot_state", "dialogue_preferences", "user_language", "bot_security"):
-                conn.execute(f"DELETE FROM {table} WHERE telegram_user_id=?", (user_id,))
+        try:
+            delete_telegram_user_records(DB_PATH, user_id)
+        except (sqlite3.Error, RuntimeError, ValueError):
+            log.error("Telegram user data deletion failed (details redacted)")
+            await send(client, token, chat_id,
+                       "Не удалось подтвердить удаление данных. / Could not verify data deletion.",
+                       MENU)
+            return
         try:
             from app.services.diagnostic_flow import clear_diagnostic
             clear_diagnostic("telegram", user_id)

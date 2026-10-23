@@ -70,3 +70,13 @@ def reserve_delivery(db_path, event_key):
             (event_key,),
         )
         return cursor.rowcount == 1
+
+
+def confirm_reserved_delivery(db_path, event_key):
+    """Confirm an explicitly reserved send after a successful API response."""
+    with sqlite3.connect(db_path) as conn:
+        cursor = conn.execute(
+            "UPDATE outbound_delivery SET state='sent' "
+            "WHERE event_key=? AND state='ambiguous'", (event_key,),
+        )
+        return cursor.rowcount == 1

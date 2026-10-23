@@ -21,6 +21,7 @@ from app.services.branching_dialogue import NODES, advance, options, question_co
 from app.services.question_adaptation import DialoguePreferences, topic_allowed, adapt_question, voluntary_intro
 from app.services.safety import classify_crisis_message, crisis_response
 from app.services.diagnostic_flow import handle_diagnostic_message
+from app.services.parenting_knowledge import TOPICS, find_topics, format_topic
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -337,16 +338,29 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         return
 
     if text in {"👨‍👩‍👧 Родительство", "/parenting"}:
-        set_state(user_id, "parenting")
+        options = "\\n".join(f"• {topic.key} — {topic.title}" for topic in TOPICS)
         await send(client, token, chat_id,
-                   "Родительство и цифровая среда. Дети учатся, наблюдая за взрослыми. "
-                   "Старайся уделять ребёнку внимание без отвлечений на экран, особенно во время "
-                   "общения, игры, еды и укладывания. Это не означает, что любое использование "
-                   "смартфона рядом с ребёнком причиняет вред. Рекомендации зависят от возраста, "
-                   "контекста и качества взаимодействия.\n\n"
-                   "Вопрос для размышления: в какие моменты дня ты хотел(а) бы "
-                   "откладывать телефон ради живого общения?\n\n"
-                   "Напиши свой вариант или /cancel.", MENU)
+                   "📚 Возрастная психология и родительство\\n"
+                   "Выбери тему командой /parenting ТЕМА или напиши /parenting_all.\\n\\n"
+                   + options + "\\n\\n"
+                   "Например: /parenting conflict или /parenting toddler. "
+                   "Материалы образовательные, без постановки диагнозов.", MENU)
+        return
+
+    if text == "/parenting_all":
+        await send(client, token, chat_id,
+                   "\\n\\n".join(format_topic(topic) for topic in TOPICS), MENU)
+        return
+
+    if text.startswith("/parenting "):
+        query = text.partition(" ")[2].strip()
+        topics = find_topics(query)
+        if not topics:
+            await send(client, token, chat_id,
+                       "Тема не найдена. Напиши /parenting для списка.", MENU)
+        else:
+            await send(client, token, chat_id,
+                       "\\n\\n".join(format_topic(topic) for topic in topics[:3]), MENU)
         return
 
     if text in {"🎓 Навыки и профессии", "/career"}:

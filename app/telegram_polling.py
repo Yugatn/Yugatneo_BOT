@@ -52,6 +52,7 @@ SUBMENUS = {
     "💬 Коучинг": [
         ["💬 Рефлексия", "🧠 Выбрать подход"],
         ["🧭 Коучинг по шагам"],
+        ["🧭 Коучинг по шагам"],
         ["📚 Вопросы", "🌿 Диалог по ответам"],
         ["🧩 Настроить вопросы"],
     ],
@@ -479,7 +480,14 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         )
         return
 
+    if text in {"/back", "◀️ Назад"}:
+        COACHING_SESSIONS.pop(user_id, None)
+        set_state(user_id, "menu")
+        await send(client, token, chat_id, "Возврат в главное меню. Незавершённая сессия отменена.", MENU)
+        return
+
     if text in SUBMENUS:
+        COACHING_SESSIONS.pop(user_id, None)
         set_state(user_id, "menu")
         await send(client, token, chat_id, "Выбери действие или вернись в главное меню.",
                    submenu_keyboard(text))

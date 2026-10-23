@@ -2,6 +2,7 @@
 from app.telegram_polling import (
     CATALOG,
     MENU,
+    SUBMENUS,
     available_question_categories,
     question_keyboard,
 )
@@ -9,7 +10,8 @@ from app.telegram_polling import (
 
 def test_main_menu_has_question_library():
     labels = [button["text"] for row in MENU["keyboard"] for button in row]
-    assert "📚 Вопросы" in labels
+    assert "💬 Коучинг" in labels
+    assert "📚 Вопросы" in [item for row in SUBMENUS["💬 Коучинг"] for item in row]
 
 
 def test_topics_are_russian_and_only_have_standard_questions():

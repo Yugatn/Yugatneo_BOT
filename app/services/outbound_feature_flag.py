@@ -7,5 +7,8 @@ import os
 
 
 def outbound_guard_requested(env=None):
+    """Opt in only for isolated non-production environments."""
     values = os.environ if env is None else env
-    return values.get("YUGATNEO_EXPERIMENTAL_OUTBOUND", "").strip().lower() == "true"
+    enabled = values.get("YUGATNEO_EXPERIMENTAL_OUTBOUND", "").strip().lower() == "true"
+    environment = values.get("APP_ENV", "development").strip().lower()
+    return enabled and environment in {"development", "test", "staging"}

@@ -4,6 +4,7 @@ Run locally with: python -m app.telegram_polling
 Secrets belong in .env and must never be committed.
 """
 import asyncio
+from contextvars import ContextVar
 import json
 import logging
 import re
@@ -27,6 +28,8 @@ from app.services.language_preferences import get_language, set_language, englis
 from app.services.interface_i18n import tr
 from app.services.report_formatter import build_report
 from app.services.telegram_text import split_telegram_text
+from app.services.outbound_feature_flag import outbound_guard_requested
+from app.services.outbound_delivery import deliver_user_reserved, outbound_event_key
 from app.services.bot_security import check_message, init_security
 from app.services.idempotent_reflection import save_report_once
 from app.services.sqlite_security import secure_sqlite_path, secure_sqlite_sidecars
@@ -317,13 +320,49 @@ async def api(client: httpx.AsyncClient, token: str, method: str, payload: dict[
         raise RuntimeError(f"Telegram API {method} failed (details redacted)") from None
 
 
+# Only static /start responses are eligible for experimental outbound deduplication.
+_OUTBOUND_CONTEXT: ContextVar[tuple[int, str, int] | None] = ContextVar(
+    "outbound_context", default=None
+)
+
+
+async def handle_update_message(client, token, update_id, message):
+    raw_text = (message.get("text") or "").strip()
+    user = message.get("from") or {}
+    chat = message.get("chat") or {}
+    eligible = (
+        outbound_guard_requested()
+        and raw_text == "/start"
+        and chat.get("type") == "private"
+        and not user.get("is_bot")
+        and user.get("id")
+        and chat.get("id") == user.get("id")
+    )
+    if not eligible:
+        return await handle_message(client, token, message)
+    reset_token = _OUTBOUND_CONTEXT.set((update_id, str(user["id"]), 0))
+    try:
+        return await handle_message(client, token, message)
+    finally:
+        _OUTBOUND_CONTEXT.reset(reset_token)
+
+
 async def send(client: httpx.AsyncClient, token: str, chat_id: int, text: str, keyboard: dict | None = MENU) -> None:
     parts = split_telegram_text(text)
     for index, part in enumerate(parts):
         payload: dict[str, Any] = {"chat_id": chat_id, "text": part}
         if keyboard is not None and index == len(parts) - 1:
             payload["reply_markup"] = keyboard
-        await api(client, token, "sendMessage", payload)
+        context = _OUTBOUND_CONTEXT.get()
+        if context is None:
+            await api(client, token, "sendMessage", payload)
+        else:
+            update_id, user_id, response_index = context
+            _OUTBOUND_CONTEXT.set((update_id, user_id, response_index + 1))
+            event_key = outbound_event_key(update_id, response_index)
+            async def transmit():
+                await api(client, token, "sendMessage", payload)
+            await deliver_user_reserved(DB_PATH, user_id, event_key, transmit)
 
 
 async def handle_message(client: httpx.AsyncClient, token: str, message: dict[str, Any]) -> None:
@@ -1163,7 +1202,7 @@ async def main() -> None:
                         if update.get("message"):
                             processed = await dispatch_update(
                                 DB_PATH, update_id,
-                                lambda: handle_message(client, token, update["message"]),
+                                lambda: handle_update_message(client, token, update_id, update["message"]),
                             )
                             if not processed:
                                 job = update_job_status(DB_PATH, update_id)

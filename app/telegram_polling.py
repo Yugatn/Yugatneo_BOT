@@ -327,16 +327,29 @@ _OUTBOUND_CONTEXT: ContextVar[tuple[int, str, int] | None] = ContextVar(
 
 
 async def handle_update_message(client, token, update_id, message):
-    raw_text = (message.get("text") or "").strip()
-    user = message.get("from") or {}
-    chat = message.get("chat") or {}
+    # Ignore malformed envelopes before accessing their fields or database.
+    if not isinstance(message, dict):
+        return
+    user = message.get("from")
+    chat = message.get("chat")
+    if not isinstance(user, dict) or not isinstance(chat, dict):
+        return
+    raw_text = message.get("text")
+    raw_text = raw_text.strip() if isinstance(raw_text, str) else ""
+    valid_private_user = (
+        type(user.get("id")) is int
+        and user["id"] > 0
+        and type(chat.get("id")) is int
+        and chat["id"] == user["id"]
+        and chat.get("type") == "private"
+        and not user.get("is_bot")
+    )
     eligible = (
         outbound_guard_requested()
         and raw_text == "/start"
-        and chat.get("type") == "private"
-        and not user.get("is_bot")
-        and user.get("id")
-        and chat.get("id") == user.get("id")
+        and valid_private_user
+        and type(update_id) is int
+        and update_id >= 0
     )
     if not eligible:
         return await handle_message(client, token, message)
@@ -366,16 +379,23 @@ async def send(client: httpx.AsyncClient, token: str, chat_id: int, text: str, k
 
 
 async def handle_message(client: httpx.AsyncClient, token: str, message: dict[str, Any]) -> None:
-    user = message.get("from") or {}
-    chat = message.get("chat") or {}
-    if not user.get("id") or not chat.get("id"):
+    if not isinstance(message, dict):
+        return
+    user = message.get("from")
+    chat = message.get("chat")
+    if not isinstance(user, dict) or not isinstance(chat, dict):
+        return
+    if type(user.get("id")) is not int or type(chat.get("id")) is not int:
+        return
+    if user["id"] <= 0 or chat["id"] <= 0:
         return
     # Private chat only: do not expose personal reflections to group members.
     if chat.get("type") != "private" or user.get("is_bot"):
         return
     user_id = str(user["id"])
     chat_id = int(chat["id"])
-    raw_text = message.get("text") or ""
+    raw_text = message.get("text")
+    raw_text = raw_text if isinstance(raw_text, str) else ""
     if len(raw_text) > 4000:
         await send(client, token, chat_id,
                    "Сообщение слишком длинное (максимум 4000 символов). / "

@@ -282,9 +282,18 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
     chat = message.get("chat") or {}
     if not user.get("id") or not chat.get("id"):
         return
+    # Private chat only: do not expose personal reflections to group members.
+    if chat.get("type") != "private" or user.get("is_bot"):
+        return
     user_id = str(user["id"])
     chat_id = int(chat["id"])
-    text = (message.get("text") or "").strip()
+    raw_text = message.get("text") or ""
+    if len(raw_text) > 4000:
+        await send(client, token, chat_id,
+                   "Сообщение слишком длинное (максимум 4000 символов). / "
+                   "Message too long (maximum 4000 characters).")
+        return
+    text = raw_text.strip()
     if not text:
         await send(client, token, chat_id, "Пока я обрабатываю только текстовые сообщения. Голосовые заметки добавим отдельным этапом.")
         return

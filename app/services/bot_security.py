@@ -59,6 +59,8 @@ def check_message(db_path: str, user_id: str, text: str, now: int | None = None)
         if verified:
             return "allow", None
         if answer is not None and expires is not None and timestamp < expires:
+            if text.strip() == "/start":
+                return "challenge", "Решите пример выше или отправьте число. / Please solve the question above."
             if text.strip() == answer:
                 conn.execute(
                     "UPDATE bot_security SET verified=1,challenge_answer=NULL,"

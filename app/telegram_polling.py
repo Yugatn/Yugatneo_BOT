@@ -31,6 +31,7 @@ from app.services.bot_security import check_message, init_security
 from app.services.sqlite_security import secure_sqlite_path, secure_sqlite_sidecars
 from app.services.personal_data import delete_telegram_user_records
 from app.services.diagnostic_encryption import encrypt_diagnostic_json, decrypt_diagnostic_json
+from app.services.startup_security import validate_encryption_startup
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -926,6 +927,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
 
 
 async def main() -> None:
+    validate_encryption_startup()
     settings = get_settings()
     token = settings.telegram_bot_token
     if not token:

@@ -75,6 +75,10 @@ def reserve_delivery(db_path, event_key):
 def confirm_reserved_delivery(db_path, event_key):
     """Confirm an explicitly reserved send after a successful API response."""
     with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS outbound_delivery "
+            "(event_key TEXT PRIMARY KEY, state TEXT NOT NULL)"
+        )
         cursor = conn.execute(
             "UPDATE outbound_delivery SET state='sent' "
             "WHERE event_key=? AND state='ambiguous'", (event_key,),

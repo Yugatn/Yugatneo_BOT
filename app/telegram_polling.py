@@ -30,7 +30,8 @@ DB_PATH = ROOT / "yugatneo_bot.sqlite3"
 MENU = {
     "keyboard": [
         [{"text": "🧭 Колесо баланса"}, {"text": "📊 Мои оценки"}],
-        [{"text": "🎯 Следующий шаг"}],
+        [{"text": "🎯 Следующий шаг"}, {"text": "✅ Отметить выполнение"}],
+        [{"text": "📈 История колеса"}],
         [{"text": "💬 Рефлексия"}, {"text": "📚 Вопросы"}],
         [{"text": "🌿 Диалог по ответам"}],
         [{"text": "🧩 Настроить вопросы"}, {"text": "⚙️ Удобство диалога"}],
@@ -158,6 +159,24 @@ def init_db() -> None:
             )
         """)
         conn.execute("""
+            CREATE TABLE IF NOT EXISTS wheel_score_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                telegram_user_id TEXT NOT NULL,
+                sphere TEXT NOT NULL,
+                score INTEGER NOT NULL CHECK(score BETWEEN 0 AND 10),
+                recorded_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS wheel_action_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                telegram_user_id TEXT NOT NULL,
+                sphere TEXT NOT NULL,
+                action TEXT NOT NULL,
+                completed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        conn.execute("""
             CREATE TABLE IF NOT EXISTS bot_state (
                 telegram_user_id TEXT PRIMARY KEY,
                 mode TEXT NOT NULL,
@@ -185,6 +204,8 @@ def get_state(user_id: str) -> tuple[str, str | None]:
 
 def save_score(user_id: str, sphere: str, score: int) -> None:
     with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("INSERT INTO wheel_score_history(telegram_user_id, sphere, score) VALUES (?, ?, ?)",
+                     (user_id, sphere, score))
         conn.execute(
             "INSERT INTO wheel_scores(telegram_user_id, sphere, score) VALUES (?, ?, ?) "
             "ON CONFLICT(telegram_user_id, sphere) DO UPDATE SET "
@@ -238,7 +259,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
 
     if text in {"/delete_my_data", "🗑 Удалить мои данные"}:
         with sqlite3.connect(DB_PATH) as conn:
-            for table in ("wheel_scores", "wheel_actions", "bot_state", "dialogue_preferences"):
+            for table in ("wheel_scores", "wheel_score_history", "wheel_actions", "wheel_action_history", "bot_state", "dialogue_preferences"):
                 conn.execute(f"DELETE FROM {table} WHERE telegram_user_id=?", (user_id,))
         try:
             from app.services.diagnostic_flow import clear_diagnostic
@@ -273,7 +294,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         return
 
     if text == "❔ Помощь" or text == "/help":
-        await send(client, token, chat_id, "Команды: /start — меню; /next_step — выбрать действие; /questions — библиотека вопросов; /skip — пропустить вопрос; /cancel — остановить сценарий; /delete_my_data — удалить локальные данные. Оценки колеса субъективны и не являются диагностикой.", MENU)
+        await send(client, token, chat_id, "Команды: /start — меню; /next_step — выбрать действие; /done — отметить выполнение; /wheel_history — история оценок; /questions — библиотека вопросов; /skip — пропустить вопрос; /cancel — остановить сценарий; /delete_my_data — удалить локальные данные. Оценки колеса субъективны и не являются диагностикой.", MENU)
         return
 
     if text == "🧭 Колесо баланса":
@@ -285,6 +306,38 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             "Можно добавлять сферы по одной; /cancel — выход.",
             MENU,
         )
+        return
+
+    if text in {"📈 История колеса", "/wheel_history"}:
+        with sqlite3.connect(DB_PATH) as conn:
+            rows = conn.execute(
+                "SELECT sphere, score, recorded_at FROM wheel_score_history "
+                "WHERE telegram_user_id=? ORDER BY id DESC LIMIT 15", (user_id,)
+            ).fetchall()
+        if not rows:
+            await send(client, token, chat_id, "История пока пуста. Начни с колеса баланса.", MENU)
+        else:
+            lines = ["Последние 15 оценок (от новых к старым):"]
+            lines.extend(f"• {date}: {sphere} — {score}/10" for sphere, score, date in rows)
+            await send(client, token, chat_id, "\n".join(lines), MENU)
+        return
+
+    if text in {"✅ Отметить выполнение", "/done"}:
+        with sqlite3.connect(DB_PATH) as conn:
+            row = conn.execute("SELECT sphere, action FROM wheel_actions WHERE telegram_user_id=?",
+                               (user_id,)).fetchone()
+            if row:
+                conn.execute(
+                    "INSERT INTO wheel_action_history(telegram_user_id, sphere, action) VALUES (?, ?, ?)",
+                    (user_id, row[0], row[1]))
+                conn.execute("DELETE FROM wheel_actions WHERE telegram_user_id=?", (user_id,))
+        if row:
+            await send(client, token, chat_id,
+                       f"Отмечено выполненным: {row[0]} — {row[1]}. "
+                       "Если хочешь, оцени сферу заново и сравни с прошлой оценкой.", MENU)
+        else:
+            await send(client, token, chat_id,
+                       "Нет выбранного шага. Выбери его через «🎯 Следующий шаг».", MENU)
         return
 
     if text in {"🎯 Следующий шаг", "/next_step"}:

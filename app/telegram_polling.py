@@ -33,6 +33,7 @@ from app.services.personal_data import delete_telegram_user_records
 from app.services.guided_reflection import Session as GuidedSession, start as start_guided, advance as guided_advance, summary as guided_summary
 from app.services.guided_report_storage import save_report as save_guided_report, read_report as read_guided_report
 from app.services.reflection_action_plan import build_action_plan
+from app.services.career_questionnaires import begin_questionnaire
 from app.services.diagnostic_encryption import encrypt_diagnostic_json, decrypt_diagnostic_json
 from app.services.startup_security import validate_encryption_startup
 from app.services.wheel_ray_catalog import catalog, normalize_ray_title
@@ -61,6 +62,7 @@ SUBMENUS = {
     ],
     "🎓 Профориентация": [
         ["🎓 Навыки и профессии", "🎯 Следующий шаг"],
+        ["🧭 Исследовать профессию", "🛠 Рефлексия навыков"],
     ],
     "📚 Психограмотность": [
         ["👨‍👩‍👧 Родительство", "🛡 Возрастные настройки"],
@@ -422,6 +424,23 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         await send(client, token, chat_id, saved or "Сохранённого итога пока нет.", MENU)
         return
 
+    if text in {"/career_questions", "🧭 Исследовать профессию",
+                "/skills_questions", "🛠 Рефлексия навыков"}:
+        kind = ("career" if text in {"/career_questions", "🧭 Исследовать профессию"}
+                else "skills")
+        GUIDED_PENDING.pop(user_id, None)
+        GUIDED_SESSIONS[user_id] = begin_questionnaire(kind)
+        COACHING_SESSIONS.pop(user_id, None)
+        q = GUIDED_SESSIONS[user_id].current
+        lang = get_language(DB_PATH, user_id)
+        await send(client, token, chat_id,
+                   ("Опросник без диагностики. Можно пропускать вопросы: /skip. "
+                    "Отмена: /cancel. Ответы временные и не передаются ИИ.\\n\\n"
+                    if lang == "ru" else
+                    "Exploratory questionnaire, not a diagnosis. /skip to skip; "
+                    "/cancel to stop. Answers stay in temporary memory.\\n\\n")
+                   + (q.en if lang == "en" else q.ru), MENU)
+        return
     if text in {"/guided", "📝 Рефлексия с итогом"}:
         GUIDED_PENDING.pop(user_id, None)
         GUIDED_SESSIONS[user_id] = start_guided()
@@ -449,8 +468,9 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         if session.finished:
             GUIDED_SESSIONS.pop(user_id, None)
             locale = get_language(DB_PATH, user_id)
-            report = (guided_summary(session, locale) + "\n\n" +
-                      build_action_plan(session, locale))
+            report = guided_summary(session, locale)
+            if session.questions[0].id == "goal":
+                report += "\n\n" + build_action_plan(session, locale)
             GUIDED_PENDING[user_id] = report
             await send(client, token, chat_id,
                        report + "\n\nСохранить итог? /save_guided — сохранить зашифрованно; "

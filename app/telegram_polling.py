@@ -24,6 +24,7 @@ from app.services.diagnostic_flow import handle_diagnostic_message
 from app.services.parenting_knowledge import TOPICS, format_topic
 from app.services.parenting_index import init_index, search_index
 from app.services.language_preferences import get_language, set_language, english_topic, ensure_language_table
+from app.services.interface_i18n import tr
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -396,15 +397,9 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         await send(client, token, chat_id, "Команды: /start — меню; /language — язык; /parenting_en — English parenting; /parenting — цифровая среда и родительство; /age — возрастная настройка; /career — рефлексия навыков; /report — персональная сводка; /approaches — выбрать психологический подход; /next_step — выбрать действие; /done — отметить выполнение; /wheel_history — история оценок; /questions — библиотека вопросов; /skip — пропустить вопрос; /cancel — остановить сценарий; /delete_my_data — удалить локальные данные. Оценки колеса субъективны и не являются диагностикой.", MENU)
         return
 
-    if text == "🧭 Колесо баланса":
+    if text in {"🧭 Колесо баланса", "/wheel"}:
         set_state(user_id, "wheel_name")
-        await send(
-            client, token, chat_id,
-            "Начнём колесо баланса. Назови сферу жизни своими словами (например, «здоровье», «творчество» или «отношения»). "
-            "Я не навязываю готовый список. После названия попрошу оценку от 0 до 10. "
-            "Можно добавлять сферы по одной; /cancel — выход.",
-            MENU,
-        )
+        await send(client, token, chat_id, tr(get_language(DB_PATH, user_id), "wheel_intro"), MENU)
         return
 
     if text in {"👨‍👩‍👧 Родительство", "/parenting"}:
@@ -436,10 +431,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
 
     if text in {"🎓 Навыки и профессии", "/career"}:
         set_state(user_id, "career_interest")
-        await send(client, token, chat_id,
-                   "Какая деятельность тебе интересна? Например, создание игр, рисование, "
-                   "видеомонтаж, помощь людям или исследования. Можно не знать будущую профессию. "
-                   "Ответы добровольны, /cancel — выход.", MENU)
+        await send(client, token, chat_id, tr(get_language(DB_PATH, user_id), "career_intro"), MENU)
         return
 
     if text in {"📄 Мой отчёт", "/report"}:
@@ -867,17 +859,17 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             await send(client, token, chat_id, "Напиши название сферы или /cancel.")
             return
         set_state(user_id, "wheel_score", sphere)
-        await send(client, token, chat_id, f"Как ты оцениваешь сферу «{sphere}» сейчас от 0 до 10? Это только твоя субъективная оценка.")
+        await send(client, token, chat_id, tr(get_language(DB_PATH, user_id), "wheel_score_prompt", sphere=sphere))
         return
 
     if mode == "wheel_score":
         if not re.fullmatch(r"(10|[0-9])", text):
-            await send(client, token, chat_id, "Введи целое число от 0 до 10. Для выхода — /cancel.", None)
+            await send(client, token, chat_id, tr(get_language(DB_PATH, user_id), "wheel_invalid"), None)
             return
         score = int(text)
         save_score(user_id, sphere or "Без названия", score)
         set_state(user_id, "wheel_name")
-        await send(client, token, chat_id, f"Сохранил: {sphere} — {score}/10.\nНазови следующую сферу или отправь /cancel, чтобы закончить.", MENU)
+        await send(client, token, chat_id, tr(get_language(DB_PATH, user_id), "wheel_saved", sphere=sphere, score=score), MENU)
         return
 
     if mode == "reflection":

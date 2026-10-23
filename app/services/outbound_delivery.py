@@ -131,3 +131,27 @@ def reserve_user_delivery(db_path, user_id, event_key):
             (event_key, user_id),
         )
         return result.rowcount == 1
+
+
+def confirm_user_delivery(db_path, user_id, event_key):
+    """Record success only for the matching user's reserved event."""
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS user_outbound_delivery "
+            "(event_key TEXT PRIMARY KEY, telegram_user_id TEXT NOT NULL, "
+            "state TEXT NOT NULL)"
+        )
+        cursor = conn.execute(
+            "UPDATE user_outbound_delivery SET state='sent' "
+            "WHERE event_key=? AND telegram_user_id=? AND state='ambiguous'",
+            (event_key, user_id),
+        )
+        return cursor.rowcount == 1
+
+
+async def deliver_user_reserved(db_path, user_id, event_key, send_callable):
+    """Optional user-scoped transport; uncertainty suppresses automatic replay."""
+    if not reserve_user_delivery(db_path, user_id, event_key):
+        return False
+    await send_callable()
+    return confirm_user_delivery(db_path, user_id, event_key)

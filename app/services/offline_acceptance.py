@@ -18,6 +18,7 @@ from app.services.backup_restore import create_verified_backup, verify_restore_r
 from app.services.guided_report_storage import read_report, save_report
 from app.services.offline_telegram_simulator import FakeTelegramTransport
 from app.services.outbound_delivery import deliver_user_reserved
+from app.services.outbound_delivery import reserve_user_delivery
 from app.services.personal_data import delete_telegram_user_records
 from app.services.report_readiness import count_unreadable_reports
 
@@ -69,11 +70,18 @@ def run_offline_acceptance():
             assert deleted["guided_reflection_reports"] == 1
             assert deleted["user_outbound_delivery"] == 2
             assert read_report(database, "synthetic-user") is None
+            assert reserve_user_delivery(
+                database, "synthetic-user", "late-after-deletion"
+            ) is False
+            assert reserve_user_delivery(
+                database, "other-synthetic-user", "new-user-event"
+            ) is True
         return {
             "offline_only": True,
             "backup_restore": "passed",
             "encrypted_report_readable": "passed",
             "user_data_deletion": "passed",
+            "post_deletion_delivery_blocked": "passed",
             **transport,
         }
 

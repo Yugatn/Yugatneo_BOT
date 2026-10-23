@@ -1,5 +1,6 @@
 """End-to-end, offline opt-in polling check against the deletion fence."""
 import asyncio
+import time
 
 from app import telegram_polling as polling
 from app.services.personal_data import delete_telegram_user_records
@@ -25,7 +26,7 @@ def test_flagged_private_start_does_not_send_after_deletion(tmp_path, monkeypatc
     async def scenario():
         await polling.handle_update_message(
             None, "fake-token", 80,
-            {"from": {"id": 11}, "chat": {"id": 11, "type": "private"}, "text": "/start"}
+            {"from": {"id": 11}, "chat": {"id": 11, "type": "private"}, "text": "/start", "date": int(time.time())}
         )
         assert outgoing == []
         await polling.handle_update_message(

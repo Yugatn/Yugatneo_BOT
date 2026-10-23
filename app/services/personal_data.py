@@ -7,6 +7,8 @@ from __future__ import annotations
 
 import sqlite3
 
+from app.services.outbound_deletion_fence import record_deletion_fence
+
 PERSONAL_TABLES = (
     "wheel_scores",
     "wheel_score_history",
@@ -101,4 +103,7 @@ def delete_telegram_user_records(db_path, user_id: str) -> dict[str, int]:
             remaining = conn.execute(count_sql, (user_id,)).fetchone()[0]
             if remaining:
                 raise RuntimeError("Personal data deletion verification failed")
+        # Commit this bounded suppression marker atomically with deletion.
+        # It is separate operational metadata, not a retained report.
+        record_deletion_fence(conn, user_id)
     return deleted

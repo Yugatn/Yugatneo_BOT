@@ -6,7 +6,6 @@ Secrets belong in .env and must never be committed.
 import asyncio
 import json
 import logging
-import os
 import re
 import sqlite3
 from pathlib import Path
@@ -29,7 +28,6 @@ from app.services.interface_i18n import tr
 from app.services.report_formatter import build_report
 from app.services.telegram_text import split_telegram_text
 from app.services.bot_security import check_message, init_security
-from app.services.telegraph_publisher import publish_public_article, TelegraphError
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -416,57 +414,28 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         await send(client, token, chat_id, tr(get_language(DB_PATH, user_id), "wheel_intro"), MENU)
         return
 
+    # Educational content stays inside Telegram; external publication is disabled.
     if text in {"/articles", "/telegraph"}:
-        locale = get_language(DB_PATH, user_id)
-        if locale == "en":
-            header = "Public educational articles. Choose /article TOPIC, e.g. /article creativity. Available topics:"
-        else:
-            header = "Публичные образовательные статьи. Выбери /article ТЕМА, например /article creativity. Темы:"
+        lang = get_language(DB_PATH, user_id)
+        intro = ("Educational topics (read in Telegram):" if lang == "en"
+                 else "Образовательные темы (чтение в Telegram):")
         await send(client, token, chat_id,
-                   header + "\\n" + "\\n".join(f"• {topic.key}" for topic in TOPICS) +
-                   "\\n\\nTelegraph: public link, never a private report.", MENU)
+                   intro + "\n" + "\n".join(
+                       f"• /parenting {topic.key}" for topic in TOPICS
+                   ), MENU)
         return
 
     if text.startswith("/article "):
         key = text.partition(" ")[2].strip().lower()
-        topic = next((topic for topic in TOPICS if topic.key == key), None)
+        topic = next((item for item in TOPICS if item.key == key), None)
         if topic is None:
             await send(client, token, chat_id,
                        "Unknown topic / Неизвестная тема. /articles", MENU)
             return
-        telegraph_token = os.environ.get("TELEGRAPH_ACCESS_TOKEN", "").strip()
-        if not telegraph_token:
-            await send(client, token, chat_id,
-                       "Telegraph publishing is not configured yet. / Telegraph пока не настроен. "
-                       "Read the article in chat: /parenting " + key, MENU)
-            return
-        locale = get_language(DB_PATH, user_id)
-        if locale == "en":
-            # Only reviewed English entries are eligible for public publication.
-            await send(client, token, chat_id,
-                       "English Telegraph publication awaits editorial review. "
-                       "Read the educational material in chat: /parenting " + key, MENU)
-            return
-        # No user-generated text, personal reports or database responses are published.
-        paragraphs = [
-            topic.summary,
-            "Вопрос для добровольной рефлексии: " + topic.coaching_question,
-            "Характер научного обоснования: " + topic.evidence,
-            "Материал образовательный, не является диагностикой или индивидуальной терапией.",
-            "Редакционная проверка первоисточников ожидается; материал предварительный.",
-        ]
-        try:
-            url = await publish_public_article(
-                client, token=telegraph_token, title=topic.title,
-                paragraphs=paragraphs)
-        except (httpx.HTTPError, TelegraphError, ValueError):
-            await send(client, token, chat_id,
-                       "Не удалось опубликовать статью. Прочитай материал в чате: /parenting " + key,
-                       MENU)
-            return
+        lang = get_language(DB_PATH, user_id)
         await send(client, token, chat_id,
-                   "Публичная статья Telegraph: " + url +
-                   "\\nСсылку может открыть любой человек.", MENU)
+                   english_topic(topic.key) if lang == "en"
+                   else format_topic(topic), MENU)
         return
 
     if text in {"👨‍👩‍👧 Родительство", "/parenting"}:

@@ -510,6 +510,10 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             career = conn.execute(
                 "SELECT interest, skill, next_experiment FROM career_reflection "
                 "WHERE telegram_user_id=?", (user_id,)).fetchone()
+        if active is not None:
+            active = (active[0], decrypt_diagnostic_json(active[1]))
+        completed = [(sphere, decrypt_diagnostic_json(action), date)
+                     for sphere, action, date in completed]
         if career is not None:
             career = tuple(decrypt_diagnostic_json(value) for value in career)
         report = build_report(get_language(DB_PATH, user_id), scores, career, active, completed)
@@ -540,6 +544,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
                     (user_id, row[0], row[1]))
                 conn.execute("DELETE FROM wheel_actions WHERE telegram_user_id=?", (user_id,))
         if row:
+            row = (row[0], decrypt_diagnostic_json(row[1]))
             await send(client, token, chat_id,
                        f"Отмечено выполненным: {row[0]} — {row[1]}. "
                        "Если хочешь, оцени сферу заново и сравни с прошлой оценкой.", MENU)
@@ -881,7 +886,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         with sqlite3.connect(DB_PATH) as conn:
             conn.execute("INSERT INTO wheel_actions(telegram_user_id, sphere, action) VALUES (?, ?, ?) "
                          "ON CONFLICT(telegram_user_id) DO UPDATE SET sphere=excluded.sphere, "
-                         "action=excluded.action, updated_at=CURRENT_TIMESTAMP", (user_id, sphere, action))
+                         "action=excluded.action, updated_at=CURRENT_TIMESTAMP", (user_id, sphere, encrypt_diagnostic_json(action)))
         set_state(user_id, "menu")
         await send(client, token, chat_id,
                    f"Твой выбранный шаг для «{sphere}»: {action}\n\n"

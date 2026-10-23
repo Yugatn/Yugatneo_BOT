@@ -34,6 +34,7 @@ from app.services.guided_reflection import Session as GuidedSession, start as st
 from app.services.guided_report_storage import save_report as save_guided_report, read_report as read_guided_report
 from app.services.reflection_action_plan import build_action_plan
 from app.services.career_questionnaires import begin_questionnaire
+from app.services.career_hypotheses import career_hypotheses
 from app.services.diagnostic_encryption import encrypt_diagnostic_json, decrypt_diagnostic_json
 from app.services.startup_security import validate_encryption_startup
 from app.services.wheel_ray_catalog import catalog, normalize_ray_title
@@ -471,6 +472,8 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             report = guided_summary(session, locale)
             if session.questions[0].id == "goal":
                 report += "\n\n" + build_action_plan(session, locale)
+            elif session.questions[0].id == "interests":
+                report += "\n\n" + career_hypotheses(session, locale)
             GUIDED_PENDING[user_id] = report
             await send(client, token, chat_id,
                        report + "\n\nСохранить итог? /save_guided — сохранить зашифрованно; "

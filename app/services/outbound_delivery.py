@@ -1,6 +1,8 @@
 """Metadata-only outbound delivery ledger; message bodies are never stored."""
 import sqlite3
 
+from app.services.outbound_deletion_fence import is_delivery_blocked
+
 
 def register_delivery(db_path, event_key):
     if not isinstance(event_key, str) or not event_key or len(event_key) > 128:
@@ -120,6 +122,10 @@ def reserve_user_delivery(db_path, user_id, event_key):
     if not isinstance(event_key, str) or not event_key or len(event_key) > 128:
         raise ValueError("Invalid event key")
     with sqlite3.connect(db_path, timeout=10) as conn:
+        # Serialize reservation and deletion across all SQLite processes.
+        conn.execute("BEGIN IMMEDIATE")
+        if is_delivery_blocked(conn, user_id):
+            return False
         conn.execute(
             "CREATE TABLE IF NOT EXISTS user_outbound_delivery "
             "(event_key TEXT PRIMARY KEY, telegram_user_id TEXT NOT NULL, "

@@ -19,7 +19,9 @@ Do not skip the Telegram offset or delete the row to resume service.
 4. Investigate code/configuration failures, run offline tests, and verify
    that retrying the handler cannot repeat harmful external side effects.
 5. An authorized operator may explicitly invoke
-   `release_quarantined(db_path, update_id, operator_approved=True)`
+   `authorized_release(db_path, update_id, token)` from
+   `app.services.operator_auth` with a securely provisioned server-side
+   `YUGATNEO_OPERATOR_TOKEN` (at least 32 characters)
    while polling is stopped. The action is recorded in
    `update_operator_audit`.
 6. Restart the bot and monitor metrics. Never mark a failed update as
@@ -27,8 +29,10 @@ Do not skip the Telegram offset or delete the row to resume service.
 
 ## Limitations
 
-Operator approval is a function parameter, not authenticated identity or
-role-based access control. Restrict database and shell access at the host level.
+The new token-gated entry point authenticates possession of a shared secret,
+not a named human identity or role. The underlying internal release function
+remains callable by trusted Python code with host access. It is not an
+independent security boundary against privileged server operators. Restrict database and shell access at the host level.
 The audit is not tamper-proof against privileged database operators.
 Telegram update IDs can be correlated with other operational records; protect
 these records and define a retention policy.

@@ -154,6 +154,7 @@ def preference_keyboard() -> dict:
 def init_db() -> None:
     with sqlite3.connect(DB_PATH) as conn:
         ensure_language_table(conn)
+        init_security(conn)
         conn.execute("""
             CREATE TABLE IF NOT EXISTS wheel_scores (
                 telegram_user_id TEXT NOT NULL,

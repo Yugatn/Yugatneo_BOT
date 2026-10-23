@@ -30,6 +30,7 @@ DB_PATH = ROOT / "yugatneo_bot.sqlite3"
 MENU = {
     "keyboard": [
         [{"text": "🧭 Колесо баланса"}, {"text": "📊 Мои оценки"}],
+        [{"text": "🎯 Следующий шаг"}],
         [{"text": "💬 Рефлексия"}, {"text": "📚 Вопросы"}],
         [{"text": "🌿 Диалог по ответам"}],
         [{"text": "🧩 Настроить вопросы"}, {"text": "⚙️ Удобство диалога"}],
@@ -149,6 +150,14 @@ def init_db() -> None:
             )
         """)
         conn.execute("""
+            CREATE TABLE IF NOT EXISTS wheel_actions (
+                telegram_user_id TEXT PRIMARY KEY,
+                sphere TEXT NOT NULL,
+                action TEXT NOT NULL,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        conn.execute("""
             CREATE TABLE IF NOT EXISTS bot_state (
                 telegram_user_id TEXT PRIMARY KEY,
                 mode TEXT NOT NULL,
@@ -229,7 +238,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
 
     if text in {"/delete_my_data", "🗑 Удалить мои данные"}:
         with sqlite3.connect(DB_PATH) as conn:
-            for table in ("wheel_scores", "bot_state", "dialogue_preferences"):
+            for table in ("wheel_scores", "wheel_actions", "bot_state", "dialogue_preferences"):
                 conn.execute(f"DELETE FROM {table} WHERE telegram_user_id=?", (user_id,))
         try:
             from app.services.diagnostic_flow import clear_diagnostic
@@ -264,7 +273,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         return
 
     if text == "❔ Помощь" or text == "/help":
-        await send(client, token, chat_id, "Команды: /start — меню; /questions — библиотека вопросов; /skip — пропустить вопрос; /cancel — остановить сценарий; /delete_my_data — удалить локальные данные. Оценки колеса субъективны и не являются диагностикой.", MENU)
+        await send(client, token, chat_id, "Команды: /start — меню; /next_step — выбрать действие; /questions — библиотека вопросов; /skip — пропустить вопрос; /cancel — остановить сценарий; /delete_my_data — удалить локальные данные. Оценки колеса субъективны и не являются диагностикой.", MENU)
         return
 
     if text == "🧭 Колесо баланса":
@@ -276,6 +285,19 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             "Можно добавлять сферы по одной; /cancel — выход.",
             MENU,
         )
+        return
+
+    if text in {"🎯 Следующий шаг", "/next_step"}:
+        scores = get_scores(user_id)
+        if not scores:
+            await send(client, token, chat_id, "Сначала добавь хотя бы одну оценку в колесе баланса.", MENU)
+            return
+        options_text = "\\n".join(f"• {name}: {score}/10" for name, score in scores)
+        set_state(user_id, "wheel_action_sphere")
+        await send(client, token, chat_id,
+                   "Выбери одну сферу, в которой хочешь сделать небольшой шаг. "
+                   "Напиши её название точно как в списке:\\n" + options_text +
+                   "\\n\\nМожно выбрать любую сферу, не обязательно с минимальной оценкой.", MENU)
         return
 
     if text == "📊 Мои оценки":
@@ -484,6 +506,32 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
                        f"Вопрос {index + 1}/{len(eligible)}\n\n"
                        + adapt_question(eligible[index].text, read_prefs(user_id))
                        + "\n\nОтвет не сохраняется. /skip — следующий, /cancel — завершить.")
+        return
+
+    if mode == "wheel_action_sphere":
+        matches = [name for name, _ in get_scores(user_id) if name.casefold() == text.casefold()]
+        if not matches:
+            await send(client, token, chat_id, "Такой сферы в твоих оценках нет. Введи название из списка или /cancel.", MENU)
+            return
+        set_state(user_id, "wheel_action_text", matches[0])
+        await send(client, token, chat_id,
+                   f"Какое одно небольшое, выполнимое действие для сферы «{matches[0]}» ты готов выбрать? "
+                   "Напиши конкретный шаг своими словами (до 300 символов).", MENU)
+        return
+
+    if mode == "wheel_action_text":
+        action = re.sub(r"\\s+", " ", text).strip()
+        if not action or len(action) > 300:
+            await send(client, token, chat_id, "Опиши один шаг длиной от 1 до 300 символов или /cancel.", MENU)
+            return
+        with sqlite3.connect(DB_PATH) as conn:
+            conn.execute("INSERT INTO wheel_actions(telegram_user_id, sphere, action) VALUES (?, ?, ?) "
+                         "ON CONFLICT(telegram_user_id) DO UPDATE SET sphere=excluded.sphere, "
+                         "action=excluded.action, updated_at=CURRENT_TIMESTAMP", (user_id, sphere, action))
+        set_state(user_id, "menu")
+        await send(client, token, chat_id,
+                   f"Твой выбранный шаг для «{sphere}»: {action}\\n\\n"
+                   "Это твоё решение, а не предписание. При необходимости можешь изменить его через «🎯 Следующий шаг».", MENU)
         return
 
     if mode == "wheel_name":

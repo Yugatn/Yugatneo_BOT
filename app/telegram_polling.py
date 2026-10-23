@@ -32,7 +32,8 @@ MENU = {
         [{"text": "🧭 Колесо баланса"}, {"text": "📊 Мои оценки"}],
         [{"text": "🎯 Следующий шаг"}, {"text": "✅ Отметить выполнение"}],
         [{"text": "📈 История колеса"}],
-        [{"text": "💬 Рефлексия"}, {"text": "📚 Вопросы"}],
+        [{"text": "💬 Рефлексия"}, {"text": "🧠 Выбрать подход"}],
+        [{"text": "📚 Вопросы"}],
         [{"text": "🌿 Диалог по ответам"}],
         [{"text": "🧩 Настроить вопросы"}, {"text": "⚙️ Удобство диалога"}],
         [{"text": "❔ Помощь"}],
@@ -41,6 +42,14 @@ MENU = {
 }
 CATALOG = QuestionCatalog()
 CANCEL_WORDS = {"/cancel", "отмена", "стоп", "назад"}
+APPROACHES = {
+    "КПТ": "Какая мысль возникла в сложной ситуации? Какие факты подтверждают её, а какие допускают альтернативное объяснение?",
+    "ACT": "Какое переживание сейчас трудно принять? Что ты можешь сделать в соответствии со своими ценностями, даже если это чувство останется?",
+    "ДБТ-навыки": "Назови эмоцию и её интенсивность от 0 до 10. Что поможет безопасно снизить напряжение в ближайшие минуты?",
+    "Мотивационное интервьюирование": "Что тебе хотелось бы изменить? Что удерживает от перемен и что делает их важными для тебя?",
+    "Экзистенциальная рефлексия": "Какой вопрос о смысле, свободе или ответственности сейчас наиболее значим для тебя?",
+}
+
 
 
 def available_question_categories(prefs: DialoguePreferences | None = None) -> dict[str, str]:
@@ -294,7 +303,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         return
 
     if text == "❔ Помощь" or text == "/help":
-        await send(client, token, chat_id, "Команды: /start — меню; /next_step — выбрать действие; /done — отметить выполнение; /wheel_history — история оценок; /questions — библиотека вопросов; /skip — пропустить вопрос; /cancel — остановить сценарий; /delete_my_data — удалить локальные данные. Оценки колеса субъективны и не являются диагностикой.", MENU)
+        await send(client, token, chat_id, "Команды: /start — меню; /approaches — выбрать психологический подход; /next_step — выбрать действие; /done — отметить выполнение; /wheel_history — история оценок; /questions — библиотека вопросов; /skip — пропустить вопрос; /cancel — остановить сценарий; /delete_my_data — удалить локальные данные. Оценки колеса субъективны и не являются диагностикой.", MENU)
         return
 
     if text == "🧭 Колесо баланса":
@@ -380,6 +389,16 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             log.exception("Onboarding failed")
             await send(client, token, chat_id, "Не получилось продолжить анкету. Можно пропустить её командой /skip_diagnostic.")
             return
+
+    if text in {"🧠 Выбрать подход", "/approaches"}:
+        set_state(user_id, "approach_select")
+        keyboard = {"keyboard": [[{"text": name}] for name in APPROACHES]
+                    + [[{"text": "↩️ Главное меню"}]], "resize_keyboard": True}
+        await send(client, token, chat_id,
+                   "Выбери подход для самостоятельной психологической рефлексии. "
+                   "Это образовательные упражнения, не психотерапия и не диагностика. "
+                   "Любой вопрос можно пропустить.", keyboard)
+        return
 
     if text == "💬 Рефлексия":
         set_state(user_id, "reflection")
@@ -559,6 +578,24 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
                        f"Вопрос {index + 1}/{len(eligible)}\n\n"
                        + adapt_question(eligible[index].text, read_prefs(user_id))
                        + "\n\nОтвет не сохраняется. /skip — следующий, /cancel — завершить.")
+        return
+
+    if mode == "approach_select":
+        if text not in APPROACHES:
+            await send(client, token, chat_id,
+                       "Выбери название подхода из предложенного списка или /cancel.")
+            return
+        set_state(user_id, "approach_practice", text)
+        await send(client, token, chat_id,
+                   f"Направление: {text}.\n\n{APPROACHES[text]}\n\n"
+                   "Это упражнение для самоисследования. /cancel — завершить.", MENU)
+        return
+
+    if mode == "approach_practice":
+        await send(client, token, chat_id,
+                   "Спасибо за размышление. Можешь продолжить самостоятельно, "
+                   "выбрать другой подход через «🧠 Выбрать подход» или завершить /cancel. "
+                   "Ответы этого упражнения не сохраняются.", MENU)
         return
 
     if mode == "wheel_action_sphere":

@@ -31,6 +31,7 @@ until responsible human reviewers approve the outstanding safety work.
 - [ ] Provide working export/deletion and feedback channels
 - [ ] Define monitoring, retention, stop conditions and rollback owner
 
-The `environment_preflight` helper only checks configuration presence and
-filesystem access. It does not validate actual Telegram connectivity, key
-correctness, clinical safety, or production security.
+The `environment_preflight` helper checks configuration presence, Fernet key
+format and filesystem access. It does not verify whether the key can decrypt
+existing records, Telegram connectivity, clinical safety, or production security.
+A successful CI run is not authorization to deploy.

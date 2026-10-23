@@ -11,7 +11,7 @@ python -m pip install -r requirements.txt
 python -m app.telegram_staging_probe
 ```
 
-Первая команда запускает **локальную**, не сетевую проверку наличия TELEGRAM_BOT_TOKEN; она не показывает его значение. Параметр `polling_preflight_passed` закономерно равен `false`, так как доступа к Telegram не было.
+Вторая команда запускает **локальную**, не сетевую проверку наличия TELEGRAM_BOT_TOKEN; она не показывает его значение. Параметр `polling_preflight_passed` закономерно равен `false`, так как доступа к Telegram не было.
 
 При наличии **отдельного тестового** токена от @BotFather (хранить только в .env, не передавать в чат или GitHub):
 

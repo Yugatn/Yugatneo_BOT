@@ -25,3 +25,7 @@ def test_all_legacy_actions_remain_reachable():
         "🗑 Удалить мои данные",
     ):
         assert action in available
+
+
+def test_stepwise_coaching_is_discoverable():
+    assert any("🧭 Коучинг по шагам" in row for row in SUBMENUS["💬 Коучинг"])

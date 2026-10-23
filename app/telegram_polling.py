@@ -1170,6 +1170,10 @@ async def main() -> None:
                                 job = update_job_status(DB_PATH, update_id)
                                 if job and job[0] == 'quarantined':
                                     raise SystemExit('Telegram update quarantined; operator review required')
+                                if job and job[0] == 'done':
+                                    # Completed before the previous polling offset was acknowledged.
+                                    offset = update_id + 1
+                                    continue
                                 # An earlier attempt still holds its lease.
                                 # Do not acknowledge this or later updates.
                                 await asyncio.sleep(3)

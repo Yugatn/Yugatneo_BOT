@@ -18,6 +18,7 @@ PERSONAL_TABLES = (
     "dialogue_preferences",
     "user_language",
     "bot_security",
+    "guided_reflection_reports",
 )
 
 

@@ -31,6 +31,7 @@ def test_bounded_start_freshness(timestamp, expected):
 
 def test_experimental_stale_replay_is_not_processed(monkeypatch):
     monkeypatch.setattr(polling, "outbound_guard_requested", lambda: True)
+    monkeypatch.setattr(polling, "is_user_deletion_fenced", lambda db, user: False)
     monkeypatch.setattr(
         "app.services.outbound_update_freshness.time.time", lambda: 1_100_000
     )

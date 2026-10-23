@@ -6,6 +6,7 @@ Secrets belong in .env and must never be committed.
 import asyncio
 import json
 import logging
+import os
 import re
 import sqlite3
 from pathlib import Path
@@ -27,6 +28,7 @@ from app.services.language_preferences import get_language, set_language, englis
 from app.services.interface_i18n import tr
 from app.services.report_formatter import build_report
 from app.services.telegram_text import split_telegram_text
+from app.services.telegraph_publisher import publish_public_article, TelegraphError
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -403,6 +405,59 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
     if text in {"🧭 Колесо баланса", "/wheel"}:
         set_state(user_id, "wheel_name")
         await send(client, token, chat_id, tr(get_language(DB_PATH, user_id), "wheel_intro"), MENU)
+        return
+
+    if text in {"/articles", "/telegraph"}:
+        locale = get_language(DB_PATH, user_id)
+        if locale == "en":
+            header = "Public educational articles. Choose /article TOPIC, e.g. /article creativity. Available topics:"
+        else:
+            header = "Публичные образовательные статьи. Выбери /article ТЕМА, например /article creativity. Темы:"
+        await send(client, token, chat_id,
+                   header + "\\n" + "\\n".join(f"• {topic.key}" for topic in TOPICS) +
+                   "\\n\\nTelegraph: public link, never a private report.", MENU)
+        return
+
+    if text.startswith("/article "):
+        key = text.partition(" ")[2].strip().lower()
+        topic = next((topic for topic in TOPICS if topic.key == key), None)
+        if topic is None:
+            await send(client, token, chat_id,
+                       "Unknown topic / Неизвестная тема. /articles", MENU)
+            return
+        telegraph_token = os.environ.get("TELEGRAPH_ACCESS_TOKEN", "").strip()
+        if not telegraph_token:
+            await send(client, token, chat_id,
+                       "Telegraph publishing is not configured yet. / Telegraph пока не настроен. "
+                       "Read the article in chat: /parenting " + key, MENU)
+            return
+        locale = get_language(DB_PATH, user_id)
+        if locale == "en":
+            # Only reviewed English entries are eligible for public publication.
+            await send(client, token, chat_id,
+                       "English Telegraph publication awaits editorial review. "
+                       "Read the educational material in chat: /parenting " + key, MENU)
+            return
+        # No user-generated text, personal reports or database responses are published.
+        paragraphs = [
+            topic.summary,
+            "Вопрос для добровольной рефлексии: " + topic.coaching_question,
+            "Характер научного обоснования: " + topic.evidence,
+            "Материал образовательный, не является диагностикой или индивидуальной терапией.",
+            "Редакционная проверка первоисточников ожидается; материал предварительный.",
+        ]
+        try:
+            url = await publish_public_article(
+                client, token=telegraph_token, title=topic.title,
+                paragraphs=paragraphs)
+        except (httpx.HTTPError, TelegraphError, ValueError):
+            await send(client, token, chat_id,
+                       "Не удалось опубликовать статью. Прочитай материал в чате: /parenting " + key,
+                       MENU)
+            return
+        await send(client, token, chat_id,
+                   "Публичная статья Telegraph: " + url +
+                   "\\nСсылку может открыть любой человек.", MENU)
         return
 
     if text in {"👨‍👩‍👧 Родительство", "/parenting"}:

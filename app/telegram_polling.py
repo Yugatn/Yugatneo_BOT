@@ -925,9 +925,16 @@ async def main() -> None:
             try:
                 updates = await api(client, token, "getUpdates", params)
                 for update in updates:
-                    offset = update["update_id"] + 1
-                    if update.get("message"):
-                        await handle_message(client, token, update["message"])
+                    # A malformed user update must not stop the entire polling batch.
+                    # Advance the offset even on a failed handler to avoid an endless
+                    # replay loop. Never log private message content.
+                    try:
+                        if update.get("message"):
+                            await handle_message(client, token, update["message"])
+                    except Exception:
+                        log.exception("Telegram update processing failed; update skipped")
+                    finally:
+                        offset = update["update_id"] + 1
             except (httpx.HTTPError, RuntimeError):
                 log.exception("Telegram polling error; retrying in 3 seconds")
                 await asyncio.sleep(3)

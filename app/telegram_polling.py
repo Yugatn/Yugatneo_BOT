@@ -34,6 +34,7 @@ MENU = {
         [{"text": "📈 История колеса"}, {"text": "📄 Мой отчёт"}],
         [{"text": "💬 Рефлексия"}, {"text": "🧠 Выбрать подход"}],
         [{"text": "📚 Вопросы"}, {"text": "🎓 Навыки и профессии"}],
+        [{"text": "🛡 Возрастные настройки"}],
         [{"text": "🌿 Диалог по ответам"}],
         [{"text": "🧩 Настроить вопросы"}, {"text": "⚙️ Удобство диалога"}],
         [{"text": "❔ Помощь"}],
@@ -197,6 +198,13 @@ def init_db() -> None:
             )
         """)
         conn.execute("""
+            CREATE TABLE IF NOT EXISTS age_access (
+                telegram_user_id TEXT PRIMARY KEY,
+                age_band TEXT NOT NULL DEFAULT 'unknown',
+                deep_reflection_opt_in INTEGER NOT NULL DEFAULT 0
+            )
+        """)
+        conn.execute("""
             CREATE TABLE IF NOT EXISTS bot_state (
                 telegram_user_id TEXT PRIMARY KEY,
                 mode TEXT NOT NULL,
@@ -279,7 +287,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
 
     if text in {"/delete_my_data", "🗑 Удалить мои данные"}:
         with sqlite3.connect(DB_PATH) as conn:
-            for table in ("wheel_scores", "wheel_score_history", "wheel_actions", "wheel_action_history", "career_reflection", "bot_state", "dialogue_preferences"):
+            for table in ("wheel_scores", "wheel_score_history", "wheel_actions", "wheel_action_history", "career_reflection", "age_access", "bot_state", "dialogue_preferences"):
                 conn.execute(f"DELETE FROM {table} WHERE telegram_user_id=?", (user_id,))
         try:
             from app.services.diagnostic_flow import clear_diagnostic
@@ -314,7 +322,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         return
 
     if text == "❔ Помощь" or text == "/help":
-        await send(client, token, chat_id, "Команды: /start — меню; /career — рефлексия навыков; /report — персональная сводка; /approaches — выбрать психологический подход; /next_step — выбрать действие; /done — отметить выполнение; /wheel_history — история оценок; /questions — библиотека вопросов; /skip — пропустить вопрос; /cancel — остановить сценарий; /delete_my_data — удалить локальные данные. Оценки колеса субъективны и не являются диагностикой.", MENU)
+        await send(client, token, chat_id, "Команды: /start — меню; /age — возрастная настройка; /career — рефлексия навыков; /report — персональная сводка; /approaches — выбрать психологический подход; /next_step — выбрать действие; /done — отметить выполнение; /wheel_history — история оценок; /questions — библиотека вопросов; /skip — пропустить вопрос; /cancel — остановить сценарий; /delete_my_data — удалить локальные данные. Оценки колеса субъективны и не являются диагностикой.", MENU)
         return
 
     if text == "🧭 Колесо баланса":
@@ -449,6 +457,16 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             log.exception("Onboarding failed")
             await send(client, token, chat_id, "Не получилось продолжить анкету. Можно пропустить её командой /skip_diagnostic.")
             return
+
+    if text in {"/age", "🛡 Возрастные настройки"}:
+        set_state(user_id, "age_select")
+        await send(client, token, chat_id,
+                   "Выбери возрастную группу: до 18, 18–26 или 27+. "
+                   "Можно отказаться; тогда останется базовый режим. "
+                   "Это самоописание, а не проверка документов.",
+                   {"keyboard": [[{"text": "До 18"}, {"text": "18–26"}, {"text": "27+"}],
+                                 [{"text": "↩️ Главное меню"}]], "resize_keyboard": True})
+        return
 
     if text in {"🧠 Выбрать подход", "/approaches"}:
         set_state(user_id, "approach_select")
@@ -638,6 +656,21 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
                        f"Вопрос {index + 1}/{len(eligible)}\n\n"
                        + adapt_question(eligible[index].text, read_prefs(user_id))
                        + "\n\nОтвет не сохраняется. /skip — следующий, /cancel — завершить.")
+        return
+
+    if mode == "age_select":
+        if text not in {"До 18", "18–26", "27+"}:
+            await send(client, token, chat_id, "Выбери возрастную группу из списка или /cancel.", MENU)
+            return
+        with sqlite3.connect(DB_PATH) as conn:
+            conn.execute(
+                "INSERT INTO age_access(telegram_user_id, age_band, deep_reflection_opt_in) "
+                "VALUES (?, ?, 0) ON CONFLICT(telegram_user_id) DO UPDATE SET "
+                "age_band=excluded.age_band, deep_reflection_opt_in=0", (user_id, text))
+        set_state(user_id, "menu")
+        await send(client, token, chat_id,
+                   "Возрастная настройка сохранена. Базовые упражнения доступны всем. "
+                   "Глубокие экспериментальные сценарии пока не активированы.", MENU)
         return
 
     if mode == "career_interest":

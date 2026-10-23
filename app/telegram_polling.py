@@ -40,18 +40,37 @@ ROOT = Path(__file__).resolve().parents[1]
 DB_PATH = ROOT / "yugatneo_bot.sqlite3"
 MENU = {
     "keyboard": [
-        [{"text": "🧭 Колесо баланса"}, {"text": "📊 Мои оценки"}],
-        [{"text": "🎯 Следующий шаг"}, {"text": "✅ Отметить выполнение"}],
-        [{"text": "📈 История колеса"}, {"text": "📄 Мой отчёт"}],
-        [{"text": "💬 Рефлексия"}, {"text": "🧠 Выбрать подход"}],
-        [{"text": "📚 Вопросы"}, {"text": "🎓 Навыки и профессии"}],
-        [{"text": "🛡 Возрастные настройки"}, {"text": "👨‍👩‍👧 Родительство"}],
-        [{"text": "🌿 Диалог по ответам"}],
-        [{"text": "🧩 Настроить вопросы"}, {"text": "⚙️ Удобство диалога"}],
-        [{"text": "🌐 Язык / Language"}, {"text": "❔ Помощь"}],
+        [{"text": "🧭 Колесо баланса"}, {"text": "💬 Коучинг"}],
+        [{"text": "🎓 Профориентация"}, {"text": "📚 Психограмотность"}],
+        [{"text": "📄 Мои результаты"}, {"text": "⚙️ Настройки"}],
     ],
     "resize_keyboard": True,
 }
+SUBMENUS = {
+    "💬 Коучинг": [
+        ["💬 Рефлексия", "🧠 Выбрать подход"],
+        ["📚 Вопросы", "🌿 Диалог по ответам"],
+        ["🧩 Настроить вопросы"],
+    ],
+    "🎓 Профориентация": [
+        ["🎓 Навыки и профессии", "🎯 Следующий шаг"],
+    ],
+    "📚 Психограмотность": [
+        ["👨‍👩‍👧 Родительство", "🛡 Возрастные настройки"],
+    ],
+    "📄 Мои результаты": [
+        ["📊 Мои оценки", "📈 История колеса"],
+        ["📄 Мой отчёт", "✅ Отметить выполнение"],
+    ],
+    "⚙️ Настройки": [
+        ["🌐 Язык / Language", "⚙️ Удобство диалога"],
+        ["❔ Помощь", "🗑 Удалить мои данные"],
+    ],
+}
+def submenu_keyboard(name: str) -> dict:
+    return {"keyboard": [[{"text": label} for label in row] for row in SUBMENUS[name]]
+            + [[{"text": "↩️ Главное меню"}]], "resize_keyboard": True}
+
 CATALOG = QuestionCatalog()
 CANCEL_WORDS = {"/cancel", "отмена", "стоп", "назад"}
 APPROACHES = {
@@ -430,6 +449,15 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             MENU,
         )
         return
+
+    if text in SUBMENUS:
+        set_state(user_id, "menu")
+        await send(client, token, chat_id, "Выбери действие или вернись в главное меню.",
+                   submenu_keyboard(text))
+        return
+
+    if text == "🗑 Удалить мои данные":
+        text = "/delete_my_data"
 
     if text == "❔ Помощь" or text == "/help":
         await send(client, token, chat_id, "Команды: /start — меню; /language — язык; /parenting_en — English parenting; /parenting — цифровая среда и родительство; /age — возрастная настройка; /career — рефлексия навыков; /report — персональная сводка; /approaches — выбрать психологический подход; /next_step — выбрать действие; /done — отметить выполнение; /wheel_history — история оценок; /questions — библиотека вопросов; /skip — пропустить вопрос; /cancel — остановить сценарий; /delete_my_data — удалить локальные данные. Оценки колеса субъективны и не являются диагностикой.", MENU)

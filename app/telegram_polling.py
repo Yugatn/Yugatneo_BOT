@@ -30,6 +30,7 @@ from app.services.telegram_text import split_telegram_text
 from app.services.bot_security import check_message, init_security
 from app.services.sqlite_security import secure_sqlite_path, secure_sqlite_sidecars
 from app.services.personal_data import delete_telegram_user_records
+from app.services.guided_reflection import Session as GuidedSession, start as start_guided, advance as guided_advance, summary as guided_summary
 from app.services.diagnostic_encryption import encrypt_diagnostic_json, decrypt_diagnostic_json
 from app.services.startup_security import validate_encryption_startup
 from app.services.wheel_ray_catalog import catalog, normalize_ray_title
@@ -51,7 +52,7 @@ MENU = {
 SUBMENUS = {
     "💬 Коучинг": [
         ["💬 Рефлексия", "🧠 Выбрать подход"],
-        ["🧭 Коучинг по шагам"],
+        ["🧭 Коучинг по шагам", "📝 Рефлексия с итогом"],
         ["🧭 Коучинг по шагам"],
         ["📚 Вопросы", "🌿 Диалог по ответам"],
         ["🧩 Настроить вопросы"],
@@ -78,6 +79,7 @@ def submenu_keyboard(name: str) -> dict:
 CATALOG = QuestionCatalog()
 from app.services.coaching_session import PROMPTS as COACHING_PROMPTS
 COACHING_SESSIONS: dict[str, CoachingSession] = {}
+GUIDED_SESSIONS: dict[str, GuidedSession] = {}
 CANCEL_WORDS = {"/cancel", "отмена", "стоп", "назад"}
 APPROACHES = {
     "Гештальт-рефлексия": "Что ты замечаешь прямо сейчас: в чувствах, телесных ощущениях и потребностях? Что остаётся незавершённым и требует внимания?",
@@ -339,6 +341,8 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
     # Safety takes precedence over every scripted flow, not just LLM reflection.
     crisis = classify_crisis_message(text)
     if crisis:
+        GUIDED_SESSIONS.pop(user_id, None)
+        COACHING_SESSIONS.pop(user_id, None)
         set_state(user_id, "menu")
         await send(client, token, chat_id, crisis_response(crisis), MENU)
         return
@@ -351,6 +355,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             return
 
     if text in {"/delete_my_data", "🗑 Удалить мои данные"}:
+        GUIDED_SESSIONS.pop(user_id, None)
         COACHING_SESSIONS.pop(user_id, None)
         try:
             delete_telegram_user_records(DB_PATH, user_id)
@@ -379,6 +384,43 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         COACHING_SESSIONS.pop(user_id, None)
         set_state(user_id, "menu")
         await send(client, token, chat_id, "Возврат в главное меню. Незавершённая сессия отменена.", MENU)
+        return
+
+    if text in {"/guided", "📝 Рефлексия с итогом"}:
+        GUIDED_SESSIONS[user_id] = start_guided()
+        COACHING_SESSIONS.pop(user_id, None)
+        q = GUIDED_SESSIONS[user_id].current
+        await send(client, token, chat_id,
+                   "Рефлексия из пяти вопросов. Ответы хранятся только в памяти "
+                   "до завершения или отмены и не отправляются в ИИ. "
+                   "/skip — пропустить, /cancel — отменить.\\n\\n" + q.ru,
+                   MENU)
+        return
+    if user_id in GUIDED_SESSIONS:
+        if text in {"/cancel", "/back", "↩️ Главное меню", "/start", "стоп", "отмена"}:
+            GUIDED_SESSIONS.pop(user_id, None)
+            await send(client, token, chat_id,
+                       "Рефлексия отменена, временные ответы удалены.", MENU)
+            return
+        try:
+            session = guided_advance(GUIDED_SESSIONS[user_id],
+                                     None if text == "/skip" else text)
+        except ValueError:
+            await send(client, token, chat_id,
+                       "Ответ слишком длинный. До 1000 символов или /skip.", MENU)
+            return
+        if session.finished:
+            GUIDED_SESSIONS.pop(user_id, None)
+            await send(client, token, chat_id,
+                       guided_summary(session, get_language(DB_PATH, user_id)), MENU)
+        else:
+            GUIDED_SESSIONS[user_id] = session
+            question = session.current
+            lang = get_language(DB_PATH, user_id)
+            await send(client, token, chat_id,
+                       f"Вопрос {len(session.responses) + 1}/{len(session.questions)}\\n\\n"
+                       + (question.en if lang == "en" else question.ru)
+                       + "\\n\\n/skip — пропустить, /cancel — отменить.", MENU)
         return
 
     # Stateless channel adapter over the explicit-consent coaching state machine.
@@ -487,6 +529,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         return
 
     if text in SUBMENUS:
+        GUIDED_SESSIONS.pop(user_id, None)
         COACHING_SESSIONS.pop(user_id, None)
         set_state(user_id, "menu")
         await send(client, token, chat_id, "Выбери действие или вернись в главное меню.",

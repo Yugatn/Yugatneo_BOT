@@ -21,7 +21,8 @@ from app.services.branching_dialogue import NODES, advance, options, question_co
 from app.services.question_adaptation import DialoguePreferences, topic_allowed, adapt_question, voluntary_intro
 from app.services.safety import classify_crisis_message, crisis_response
 from app.services.diagnostic_flow import handle_diagnostic_message
-from app.services.parenting_knowledge import TOPICS, find_topics, format_topic
+from app.services.parenting_knowledge import TOPICS, format_topic
+from app.services.parenting_index import init_index, search_index
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
@@ -348,13 +349,14 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         return
 
     if text == "/parenting_all":
-        await send(client, token, chat_id,
-                   "\\n\\n".join(format_topic(topic) for topic in TOPICS), MENU)
+        for topic in TOPICS:
+            await send(client, token, chat_id, format_topic(topic), MENU)
         return
 
     if text.startswith("/parenting "):
         query = text.partition(" ")[2].strip()
-        topics = find_topics(query)
+        init_index(DB_PATH)
+        topics = search_index(DB_PATH, query, limit=3)
         if not topics:
             await send(client, token, chat_id,
                        "Тема не найдена. Напиши /parenting для списка.", MENU)

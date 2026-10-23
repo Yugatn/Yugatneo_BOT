@@ -36,3 +36,8 @@ jobs:
           APP_ENV: test
           LLM_PROVIDER: mock
         run: python -m pytest -q
+      - name: Run synthetic offline acceptance
+        env:
+          APP_ENV: test
+          LLM_PROVIDER: mock
+        run: python -m app.services.offline_acceptance

@@ -8,6 +8,8 @@ until responsible human reviewers approve the outstanding safety work.
 - [ ] GitHub Actions tests pass on supported Python versions
 - [ ] Run `environment_preflight(db_path)` on the target host
 - [ ] Verify valid encryption configuration with startup checks
+- [ ] Run `count_unreadable_reports(db_path)` on a protected staging copy; require `unreadable == 0`
+- [ ] After restoring a backup, repeat report readability verification with the intended key
 - [ ] Verify backup, restore, and scoped personal-data deletion on staging
 - [ ] Test Telegram polling restart with an unacknowledged update
 - [ ] Test quarantine, explicit operator recovery, and audit recording

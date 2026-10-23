@@ -1,4 +1,5 @@
 import asyncio
+import time
 
 from app import telegram_polling as polling
 
@@ -11,7 +12,7 @@ def test_safety_and_deletion_messages_bypass_experimental_context(monkeypatch):
         observed.append((message["text"], polling._OUTBOUND_CONTEXT.get()))
 
     monkeypatch.setattr(polling, "handle_message", handler)
-    base = {"from": {"id": 11}, "chat": {"id": 11, "type": "private"}}
+    base = {"from": {"id": 11}, "chat": {"id": 11, "type": "private"}, "date": int(time.time())}
 
     async def scenario():
         for index, message in enumerate((

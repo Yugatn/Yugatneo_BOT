@@ -31,7 +31,7 @@ MENU = {
     "keyboard": [
         [{"text": "🧭 Колесо баланса"}, {"text": "📊 Мои оценки"}],
         [{"text": "🎯 Следующий шаг"}, {"text": "✅ Отметить выполнение"}],
-        [{"text": "📈 История колеса"}],
+        [{"text": "📈 История колеса"}, {"text": "📄 Мой отчёт"}],
         [{"text": "💬 Рефлексия"}, {"text": "🧠 Выбрать подход"}],
         [{"text": "📚 Вопросы"}],
         [{"text": "🌿 Диалог по ответам"}],
@@ -43,6 +43,8 @@ MENU = {
 CATALOG = QuestionCatalog()
 CANCEL_WORDS = {"/cancel", "отмена", "стоп", "назад"}
 APPROACHES = {
+    "Гештальт-рефлексия": "Что ты замечаешь прямо сейчас: в чувствах, телесных ощущениях и потребностях? Что остаётся незавершённым и требует внимания?",
+    "Коучинг": "Какую цель ты выбираешь? По каким наблюдаемым признакам поймёшь, что приблизился к ней?",
     "КПТ": "Какая мысль возникла в сложной ситуации? Какие факты подтверждают её, а какие допускают альтернативное объяснение?",
     "ACT": "Какое переживание сейчас трудно принять? Что ты можешь сделать в соответствии со своими ценностями, даже если это чувство останется?",
     "ДБТ-навыки": "Назови эмоцию и её интенсивность от 0 до 10. Что поможет безопасно снизить напряжение в ближайшие минуты?",
@@ -303,7 +305,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
         return
 
     if text == "❔ Помощь" or text == "/help":
-        await send(client, token, chat_id, "Команды: /start — меню; /approaches — выбрать психологический подход; /next_step — выбрать действие; /done — отметить выполнение; /wheel_history — история оценок; /questions — библиотека вопросов; /skip — пропустить вопрос; /cancel — остановить сценарий; /delete_my_data — удалить локальные данные. Оценки колеса субъективны и не являются диагностикой.", MENU)
+        await send(client, token, chat_id, "Команды: /start — меню; /report — персональная сводка; /approaches — выбрать психологический подход; /next_step — выбрать действие; /done — отметить выполнение; /wheel_history — история оценок; /questions — библиотека вопросов; /skip — пропустить вопрос; /cancel — остановить сценарий; /delete_my_data — удалить локальные данные. Оценки колеса субъективны и не являются диагностикой.", MENU)
         return
 
     if text == "🧭 Колесо баланса":
@@ -315,6 +317,38 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
             "Можно добавлять сферы по одной; /cancel — выход.",
             MENU,
         )
+        return
+
+    if text in {"📄 Мой отчёт", "/report"}:
+        scores = get_scores(user_id)
+        with sqlite3.connect(DB_PATH) as conn:
+            active = conn.execute(
+                "SELECT sphere, action FROM wheel_actions WHERE telegram_user_id=?",
+                (user_id,)).fetchone()
+            completed = conn.execute(
+                "SELECT sphere, action, completed_at FROM wheel_action_history "
+                "WHERE telegram_user_id=? ORDER BY id DESC LIMIT 5",
+                (user_id,)).fetchall()
+        if not scores and not active and not completed:
+            await send(client, token, chat_id,
+                       "Для отчёта пока недостаточно данных. Начни с колеса баланса или выбери следующий шаг.", MENU)
+            return
+        lines = ["📄 ТВОЙ ОТЧЁТ О САМООЦЕНКЕ",
+                 "Это сводка твоих собственных записей, а не психологический диагноз."]
+        if scores:
+            lines.append("\nТекущие оценки:")
+            lines.extend(f"• {name}: {score}/10" for name, score in scores)
+            mean = sum(score for _, score in scores) / len(scores)
+            lines.append(f"Средняя оценка выбранных сфер: {mean:.1f}/10 "
+                         "(описательная величина, не показатель психологического здоровья).")
+        if active:
+            lines.append(f"\nВыбранное действие: {active[0]} — {active[1]}")
+        if completed:
+            lines.append("\nПоследние отмеченные достижения:")
+            lines.extend(f"• {sphere}: {action} ({date})" for sphere, action, date in completed)
+        lines.append("\nДля продолжения можешь пересмотреть оценки, выбрать одно небольшое действие "
+                     "или воспользоваться упражнениями по выбранному подходу.")
+        await send(client, token, chat_id, "\n".join(lines), MENU)
         return
 
     if text in {"📈 История колеса", "/wheel_history"}:

@@ -313,7 +313,7 @@ async def api(client: httpx.AsyncClient, token: str, method: str, payload: dict[
         )
         response.raise_for_status()
         data = response.json()
-        if not data.get("ok"):
+        if not isinstance(data, dict) or not data.get("ok"):
             raise RuntimeError("Telegram returned an unsuccessful response")
         return data["result"]
     except (httpx.HTTPError, ValueError, KeyError, RuntimeError):

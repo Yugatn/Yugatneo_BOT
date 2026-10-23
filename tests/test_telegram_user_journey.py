@@ -37,11 +37,17 @@ def test_private_chat_captcha_wheel_report_and_delete(tmp_path, monkeypatch):
         assert "Verification complete" in sent[-1][1]
         await message("/start")
         assert "Yugatn" in sent[-1][1]
+        await message("/lang_en")
+        assert "English selected" in sent[-1][1]
+        await message("/start")
+        assert "Welcome" in sent[-1][1]
         await message("/wheel")
+        assert "life balance" in sent[-1][1]
         await message("Creativity")
         await message("8")
         await message("/report")
         assert "Creativity" in sent[-1][1]
+        assert "YOUR SELF-REFLECTION REPORT" in sent[-1][1]
         await message("/delete_my_data")
         with sqlite3.connect(db) as conn:
             assert conn.execute(

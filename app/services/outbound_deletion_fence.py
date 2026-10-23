@@ -53,6 +53,19 @@ def is_delivery_blocked(conn: sqlite3.Connection, user_id: str, *, now: int | No
     ).fetchone() is not None
 
 
+def is_user_deletion_fenced(db_path, user_id: str) -> bool:
+    """Check the deletion barrier under the SQLite writer lock.
+
+    Call before initiating an optional /start workflow so that a suppressed
+    reply cannot still create a new preference or state record.
+    """
+    if not isinstance(user_id, str) or not user_id:
+        raise ValueError("Missing Telegram user ID")
+    with sqlite3.connect(db_path, timeout=10) as conn:
+        conn.execute("BEGIN IMMEDIATE")
+        return is_delivery_blocked(conn, user_id)
+
+
 def purge_expired_deletion_fences(db_path, *, now: int | None = None) -> int:
     """Purge expired operational markers; can run offline or in maintenance."""
     current_time = int(time.time()) if now is None else now

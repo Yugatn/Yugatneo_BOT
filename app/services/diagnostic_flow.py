@@ -15,6 +15,7 @@ from app.core.config import get_settings
 from app.core.models import Question
 from app.services.catalog import load_questions
 from app.services.diagnostic import DiagnosticProfile, prioritize_questions
+from app.services.sqlite_security import secure_sqlite_path, secure_sqlite_sidecars
 
 STEPS = ["age", "goal", "distress", "style", "temperament", "gender", "psychotype"]
 GOAL_LABELS = {
@@ -53,7 +54,7 @@ def _db_path() -> str:
 def _connect() -> sqlite3.Connection:
     path = _db_path()
     if path != ":memory:":
-        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        secure_sqlite_path(path)
     conn = sqlite3.connect(path, timeout=10)
     conn.execute("""CREATE TABLE IF NOT EXISTS diagnostic_sessions (
         subject_key TEXT PRIMARY KEY,
@@ -63,6 +64,8 @@ def _connect() -> sqlite3.Connection:
         updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )""")
     conn.commit()
+    if path != ":memory:":
+        secure_sqlite_sidecars(path)
     return conn
 
 

@@ -25,10 +25,11 @@ Expected acceptance output is one JSON object with:
 - `backup_restore: "passed"`
 - `encrypted_report_readable: "passed"`
 - `user_data_deletion: "passed"`
+- `post_deletion_delivery_blocked: "passed"`
 - `normal_send: "passed"`
 - `uncertain_send: "passed"`
 
-All five status fields and both supported Python test jobs must pass. No real
+All six status fields and both supported Python test jobs must pass. No real
 user messages or encryption keys may appear in test logs. Failing, skipped,
 or queued checks must not be reported as verified.
 
@@ -51,8 +52,10 @@ reserved before remote acceptance can become permanently ambiguous; no
 automatic resend occurs, including after a failure before the network
 request. Deleting local data does not recall Telegram messages already
 sent. An in-flight operation can still transmit after deletion begins.
-The user-scoped ledger does not yet implement a multi-process deletion
-barrier or operator reconciliation. The experimental flag must remain OFF
+A 24-hour SQLite deletion fence blocks new experimental outbound reservations
+across processes, but does not cancel an already started network request.
+The short-lived identifier stored for the fence requires a privacy/retention
+assessment. Operator reconciliation remains unimplemented. The experimental flag must remain OFF
 outside isolated tests pending resolution and independent approval.
 
 A green CI result is necessary but does not authorize a public or clinical

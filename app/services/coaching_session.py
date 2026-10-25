@@ -25,7 +25,7 @@ PROMPTS = {
     Stage.OPTIONS: "Назови два возможных действия, включая право ничего не менять.",
     Stage.ACTION: "Какой один небольшой и безопасный шаг ты добровольно выбираешь?",
     Stage.REVIEW: "Когда и по какому наблюдаемому признаку ты проверишь результат?",
-    Stage.DONE: "План сформирован. Его можно пересмотреть или отменить.",
+    Stage.DONE: "Рефлексия завершена. Ты можешь сформулировать или пересмотреть свой план на основе ответов.",
     Stage.CANCELLED: "Сессия завершена без оценки и без обязательств.",
 }
 NEXT = {
@@ -70,6 +70,9 @@ def advance(session: Session, answer: str) -> tuple[Session, str]:
         ended = Session(Stage.CANCELLED)
         return ended, PROMPTS[ended.stage]
     if session.stage is Stage.CONSENT:
+        if command in {"нет", "no", "не согласен", "не согласна"}:
+            ended = Session(Stage.CANCELLED)
+            return ended, PROMPTS[ended.stage]
         if command not in {"да", "yes", "согласен", "согласна"}:
             return session, PROMPTS[Stage.CONSENT]
         next_state = Session(Stage.GOAL)

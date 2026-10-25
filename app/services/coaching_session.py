@@ -45,25 +45,58 @@ class Session:
     answers: tuple[tuple[str, str], ...] = ()
 
 
+_QUESTION_STAGES = (
+    Stage.GOAL, Stage.EVIDENCE, Stage.OPTIONS, Stage.ACTION, Stage.REVIEW,
+)
+
+
+def _next_prompt(session: Session) -> str:
+    """Do not claim a complete action plan when questions were skipped."""
+    if session.stage is Stage.DONE and len(session.answers) != len(_QUESTION_STAGES):
+        return (
+            "Рефлексия завершена. Часть вопросов пропущена, поэтому полный "
+            "план не сформирован. При желании можно начать новую сессию."
+        )
+    return PROMPTS[session.stage]
+
+
 def advance(session: Session, answer: str) -> tuple[Session, str]:
-    """Return a new session and next prompt. No inferred consent."""
+    """Advance an explicitly consented session without logging or persistence."""
     answer = answer.strip()
+    command = answer.casefold()
     if session.stage in (Stage.DONE, Stage.CANCELLED):
-        return session, PROMPTS[session.stage]
-    if answer.casefold() in {"отмена", "/cancel", "stop", "нет, отмена"}:
+        return session, _next_prompt(session)
+    if command in {"отмена", "/cancel", "stop", "нет, отмена"}:
         ended = Session(Stage.CANCELLED)
         return ended, PROMPTS[ended.stage]
     if session.stage is Stage.CONSENT:
-        if answer.casefold() not in {"да", "yes", "согласен", "согласна"}:
+        if command not in {"да", "yes", "согласен", "согласна"}:
             return session, PROMPTS[Stage.CONSENT]
         next_state = Session(Stage.GOAL)
         return next_state, PROMPTS[next_state.stage]
+
+    if command in {"/repeat", "повтори вопрос"}:
+        return session, PROMPTS[session.stage]
+    if command == "/progress":
+        number = _QUESTION_STAGES.index(session.stage) + 1
+        return session, (
+            f"Вопрос {number} из {len(_QUESTION_STAGES)}. "
+            "Ответы остаются только в памяти текущей сессии.\n"
+            + PROMPTS[session.stage]
+        )
+    if command in {"/skip", "пропустить"}:
+        # No placeholder text or synthetic answer is recorded for skipped steps.
+        updated = replace(session, stage=NEXT[session.stage])
+        return updated, "Вопрос пропущен.\n" + _next_prompt(updated)
+
     if not answer or len(answer) > 2000:
         return session, "Ответ должен содержать от 1 до 2000 символов."
     next_stage = NEXT[session.stage]
-    updated = replace(session, stage=next_stage,
-                      answers=session.answers + ((session.stage.value, answer),))
-    return updated, PROMPTS[next_stage]
+    updated = replace(
+        session, stage=next_stage,
+        answers=session.answers + ((session.stage.value, answer),),
+    )
+    return updated, _next_prompt(updated)
 
 
 def erase(_: Session) -> Session:

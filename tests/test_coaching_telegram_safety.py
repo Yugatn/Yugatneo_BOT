@@ -32,6 +32,8 @@ def _fake_transport(monkeypatch):
     monkeypatch.setattr(polling, "send", send)
     monkeypatch.setattr(polling, "check_message", lambda *args: ("allow", None))
     monkeypatch.setattr(polling, "COACHING_SESSIONS", {"42": _active_session()})
+    monkeypatch.setattr(polling, "GUIDED_SESSIONS", {})
+    monkeypatch.setattr(polling, "GUIDED_PENDING", {})
     return sent
 
 

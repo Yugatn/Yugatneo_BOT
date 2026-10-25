@@ -573,7 +573,7 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
                    "Пошаговая добровольная коучинговая сессия. Ответы хранятся "
                    "временно в памяти и не сохраняются автоматически. "
                    "/skip — пропустить, /repeat — повторить вопрос, "
-                   "/progress — этап, /cancel — отмена.\\n"
+                   "/progress — этап, /cancel — отмена.\n"
                    + COACHING_PROMPTS[CoachingStage.CONSENT], MENU)
         return
     if user_id in COACHING_SESSIONS:

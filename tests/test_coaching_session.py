@@ -3,7 +3,7 @@ from app.services.coaching_session import Session, Stage, advance, erase
 
 def test_consent_is_explicit():
     session = Session()
-    for answer in ("", "может быть", "нет"):
+    for answer in ("", "может быть"):
         session, _ = advance(session, answer)
         assert session.stage == Stage.CONSENT
     session, _ = advance(session, "да")

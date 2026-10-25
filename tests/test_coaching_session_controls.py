@@ -54,7 +54,8 @@ def test_complete_session_still_forms_plan():
         session, message = advance(session, answer)
     assert session.stage is Stage.DONE
     assert len(session.answers) == 5
-    assert "План сформирован" in message
+    assert "Рефлексия завершена" in message
+    assert "План сформирован" not in message
 
 
 def test_cancellation_after_skip_forgets_answers():
@@ -72,3 +73,18 @@ def test_skip_does_not_bypass_max_length_limit_for_free_text():
     assert updated == session
     updated, _ = advance(session, "/skip")
     assert updated.stage is Stage.EVIDENCE
+
+
+def test_declining_consent_ends_session_without_data():
+    for response in ("нет", "NO", "не согласен", "не согласна"):
+        session, message = advance(Session(), response)
+        assert session.stage is Stage.CANCELLED
+        assert session.answers == ()
+        assert "без обязательств" in message
+
+
+def test_unclear_consent_does_not_advance():
+    session, message = advance(Session(), "может быть")
+    assert session.stage is Stage.CONSENT
+    assert session.answers == ()
+    assert "Начать?" in message

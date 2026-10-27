@@ -570,7 +570,10 @@ async def handle_message(client: httpx.AsyncClient, token: str, message: dict[st
     if text in {"/coaching_session", "🧭 Коучинг по шагам"}:
         COACHING_SESSIONS[user_id] = CoachingSession()
         await send(client, token, chat_id,
-                   "Пошаговая коучинговая сессия. /cancel — отмена.\\n"
+                   "Пошаговая добровольная коучинговая сессия. Ответы хранятся "
+                   "временно в памяти и не сохраняются автоматически. "
+                   "/skip — пропустить, /repeat — повторить вопрос, "
+                   "/progress — этап, /cancel — отмена.\n"
                    + COACHING_PROMPTS[CoachingStage.CONSENT], MENU)
         return
     if user_id in COACHING_SESSIONS:

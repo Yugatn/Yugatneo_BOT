@@ -47,7 +47,12 @@ class TurnRequest(BaseModel):
 
 
 def authorized_subject(authorization: str | None) -> str:
-    if not get_settings().miniapp_coaching_enabled:
+    settings = get_settings()
+    # Second, independent gate: toggling a staging feature flag cannot
+    # accidentally make this unreviewed psychology feature public.
+    if settings.app_env.lower() in {"production", "prod"}:
+        raise HTTPException(503, "Coaching API has not passed production review")
+    if not settings.miniapp_coaching_enabled:
         raise HTTPException(503, "Coaching API is disabled")
     return identity(authorization)
 

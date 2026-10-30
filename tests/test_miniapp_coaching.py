@@ -69,6 +69,14 @@ def test_feature_is_disabled_by_default_and_is_fail_closed(client, monkeypatch):
     assert api.sessions.erase_all("42") == 0
 
 
+def test_production_cannot_enable_unreviewed_coaching_even_with_flag(client, monkeypatch):
+    monkeypatch.setattr(get_settings(), "miniapp_coaching_enabled", True)
+    monkeypatch.setattr(get_settings(), "app_env", "production")
+    response = start(client)
+    assert response.status_code == 503
+    assert api.sessions.erase_all("42") == 0
+
+
 def test_auth_missing_invalid_and_expired(client):
     endpoint = "/api/v1/miniapp/coaching/sessions"
     assert client.post(endpoint, json=payload()).status_code == 401

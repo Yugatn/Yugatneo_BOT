@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Request
 from app.miniapp_wheel_api import router as miniapp_wheel_router
+from app.miniapp_coaching_api import router as miniapp_coaching_router
 from fastapi.responses import HTMLResponse, JSONResponse
 from pathlib import Path
 from pydantic import BaseModel, Field
@@ -22,6 +23,7 @@ app = FastAPI(
 
 
 app.include_router(miniapp_wheel_router)
+app.include_router(miniapp_coaching_router)
 
 class HumanVerificationRequest(BaseModel):
     ticket: str = Field(min_length=1, max_length=4096)

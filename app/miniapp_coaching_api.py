@@ -50,7 +50,7 @@ def authorized_subject(authorization: str | None) -> str:
     settings = get_settings()
     # Second, independent gate: toggling a staging feature flag cannot
     # accidentally make this unreviewed psychology feature public.
-    if settings.app_env.lower() in {"production", "prod"}:
+    if settings.app_env.strip().lower() not in {"development", "test", "staging"}:
         raise HTTPException(503, "Coaching API has not passed production review")
     if not settings.miniapp_coaching_enabled:
         raise HTTPException(503, "Coaching API is disabled")

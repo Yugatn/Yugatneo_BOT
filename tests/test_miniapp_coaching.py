@@ -75,6 +75,8 @@ def test_production_cannot_enable_unreviewed_coaching_even_with_flag(client, mon
     response = start(client)
     assert response.status_code == 503
     assert api.sessions.erase_all("42") == 0
+    monkeypatch.setattr(get_settings(), "app_env", "custom-production-alias")
+    assert start(client).status_code == 503
 
 
 def test_auth_missing_invalid_and_expired(client):

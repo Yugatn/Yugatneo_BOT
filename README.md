@@ -49,6 +49,10 @@ MAX (later) ────┘                              │
 
 Подробности: [docs/MONETIZATION.md](docs/MONETIZATION.md).
 
+## Коучинговый API Колеса баланса (staging, выключен по умолчанию)
+
+Ветка разработки содержит `/api/v1/miniapp/coaching`: короткоживущие серверные сессии с обязательным согласием, проверкой Telegram Mini App initData, изоляцией владельцев и без постоянного хранения текста ответов. Это **детерминированные вопросы**, не психотерапия и не генеративный ИИ-чат. Флаг `MINIAPP_COACHING_ENABLED=false` оставляет маршруты недоступными до проверки безопасности и приватности. См. [docs/MINIAPP_WHEEL_COACHING_API.md](docs/MINIAPP_WHEEL_COACHING_API.md).
+
 ## Быстрый старт
 
 Требуется Python 3.11+.

@@ -44,7 +44,7 @@ def client(monkeypatch, tmp_path):
 def payload(**overrides):
     return {
         "wheel_id": "main",
-        "ray_id": "health",
+        "ray_id": "r0",
         "score": 0,
         "mode": "reframe",
         "consent_for_server_processing": True,
@@ -92,6 +92,10 @@ def test_explicit_consent_adult_attestation_and_scoped_wheels(client):
     assert start(client, wheel_id="destructiveness").status_code == 422
     assert start(client, wheel_id="sexuality").status_code == 422
     assert start(client, wheel_id="fear").status_code == 422
+    assert start(client, ray_id="private narrative").status_code == 422
+    assert start(client, ray_id="r9").status_code == 422
+    assert start(client, wheel_id="work", ray_id="r8").status_code == 422
+    assert start(client, wheel_id="main", ray_id="r8").status_code == 201
     assert start(client, score=11).status_code == 422
     assert start(client, score=True).status_code == 422
     assert start(client, extra_user_id="other").status_code == 422

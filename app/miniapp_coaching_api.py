@@ -12,7 +12,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.core.config import get_settings
 from app.miniapp_wheel_api import identity
 from app.services.miniapp_coaching import (
-    PROMPTS, PILOT_WHEELS, SessionRegistry,
+    PROMPTS, PILOT_WHEELS, PILOT_RAY_COUNTS, SessionRegistry,
     SessionCapacity, StaleTurn, UnknownSession,
 )
 from app.services.security import allow_request
@@ -32,7 +32,7 @@ PRIVACY_NOTICE = (
 class StartRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     wheel_id: str = Field(min_length=1, max_length=64, pattern=r"^[a-z0-9_]+$")
-    ray_id: str = Field(min_length=1, max_length=100)
+    ray_id: str = Field(min_length=2, max_length=3, pattern=r"^r(?:0|[1-9][0-9]?)$")
     score: int | None = Field(default=None, ge=0, le=10, strict=True)
     mode: Literal["reflection", "reframe", "coaching"]
     consent_for_server_processing: bool = Field(strict=True)
@@ -86,6 +86,8 @@ def start(
         raise HTTPException(403, "Adult pilot only (self-attestation is not age verification)")
     if body.wheel_id not in PILOT_WHEELS:
         raise HTTPException(422, "This wheel is not included in the supervised pilot")
+    if int(body.ray_id[1:]) >= PILOT_RAY_COUNTS[body.wheel_id]:
+        raise HTTPException(422, "Unknown ray coordinate")
     try:
         session_id, record = sessions.start(owner, body.mode)
     except SessionCapacity:

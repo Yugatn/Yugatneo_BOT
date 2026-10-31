@@ -42,10 +42,14 @@ PROMPTS: dict[str, tuple[str, ...]] = {
 }
 
 # The pilot excludes topics that require separate clinical/privacy review.
-PILOT_WHEELS = frozenset({
-    "main", "work", "finance", "relationships", "social", "development",
-    "rest", "creativity", "self_awareness",
-})
+# Only these non-clinical, public catalogue coordinates are accepted remotely.
+# Health and sensitive thematic wheels remain offline pending expert review.
+PILOT_RAY_COUNTS: dict[str, int] = {
+    "main": 9, "work": 8, "finance": 8, "relationships": 8,
+    "social": 8, "development": 8, "rest": 8, "creativity": 8,
+    "self_awareness": 8,
+}
+PILOT_WHEELS = frozenset(PILOT_RAY_COUNTS)
 SESSION_ID_RE = re.compile(r"^[A-Za-z0-9_-]{32}$")
 
 

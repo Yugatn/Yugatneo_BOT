@@ -10,6 +10,10 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./yugatneo_bot.sqlite3"
     free_question_limit: int = 7
     llm_provider: str = "mock"
+    # Explicit opt-in: external coaching API stays unavailable until pilot gates pass.
+    miniapp_coaching_enabled: bool = False
+    # Exact HTTPS origins, comma-separated; blank means no browser cross-origin access.
+    miniapp_coaching_allowed_origins: str = ""
     openai_api_key: str | None = None
     openai_model: str | None = None
     telegram_bot_token: str | None = None

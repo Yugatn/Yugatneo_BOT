@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request
 from app.miniapp_wheel_api import router as miniapp_wheel_router
-from fastapi.responses import HTMLResponse, JSONResponse
+from app.miniapp_coaching_api import router as miniapp_coaching_router
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from pathlib import Path
 from pydantic import BaseModel, Field
 from app.core.config import get_settings
@@ -9,6 +10,9 @@ from app.services.dialogue import respond
 from app.services.access_store import claim_question
 from app.services.catalog import get_question, load_questions
 from app.services.security import allow_request
+from app.services.miniapp_cors import (
+    is_coaching_route, trusted_origins, allowed_headers, preflight_headers,
+)
 from app.services.human_gate import verify_turnstile_and_issue_code
 from app.services.diagnostic import DiagnosticProfile, prioritize_questions
 
@@ -22,6 +26,7 @@ app = FastAPI(
 
 
 app.include_router(miniapp_wheel_router)
+app.include_router(miniapp_coaching_router)
 
 class HumanVerificationRequest(BaseModel):
     ticket: str = Field(min_length=1, max_length=4096)
@@ -53,7 +58,28 @@ async def security_baseline(request: Request, call_next):
     client_host = request.client.host if request.client else "unknown"
     if not allow_request(f"ip:{client_host}", limit=120, window_seconds=60):
         return JSONResponse(status_code=429, content={"detail": "Too many requests"})
+    coaching_cors = None
+    if is_coaching_route(request.url.path):
+        origin = request.headers.get("origin")
+        allowed = trusted_origins(settings.miniapp_coaching_allowed_origins)
+        if origin is not None:
+            coaching_cors = allowed_headers(origin, allowed)
+            if coaching_cors is None:
+                return JSONResponse(
+                    status_code=403, content={"detail": "Untrusted Mini App origin"},
+                    headers={"Cache-Control": "no-store", "Vary": "Origin"},
+                )
+        if request.method == "OPTIONS":
+            preflight = preflight_headers(
+                origin or "", request.headers.get("access-control-request-method", ""),
+                request.headers.get("access-control-request-headers", ""), allowed,
+            )
+            if preflight is None:
+                return Response(status_code=403, headers={"Cache-Control": "no-store", "Vary": "Origin"})
+            return Response(status_code=204, headers=preflight)
     response = await call_next(request)
+    if coaching_cors is not None:
+        response.headers.update(coaching_cors)
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "no-referrer"

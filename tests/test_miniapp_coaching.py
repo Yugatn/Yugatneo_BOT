@@ -208,3 +208,66 @@ def test_invalid_payload_does_not_leak_answer_in_error(client):
     assert r.status_code == 422
     assert secret not in r.text
     assert client.get(url(sid), headers=telegram_auth(42)).json()["step"] == 0
+
+
+
+def test_origin_is_explicit_and_bounded(client, monkeypatch):
+    from app.services.miniapp_cors import trusted_origins
+    assert trusted_origins("") == frozenset()
+    assert trusted_origins("*") == frozenset()
+    assert trusted_origins("http://unsafe.example") == frozenset()
+    assert trusted_origins("https://safe.example/path") == frozenset()
+    assert trusted_origins("https://safe.example,https://other.example") == frozenset(
+        {"https://safe.example", "https://other.example"}
+    )
+    monkeypatch.setattr(get_settings(), "miniapp_coaching_allowed_origins", "https://pilot.example")
+
+    endpoint = "/api/v1/miniapp/coaching/sessions"
+    valid_preflight = {
+        "Origin": "https://pilot.example",
+        "Access-Control-Request-Method": "POST",
+        "Access-Control-Request-Headers": "authorization,content-type",
+    }
+    good = client.options(endpoint, headers=valid_preflight)
+    assert good.status_code == 204
+    assert good.headers["access-control-allow-origin"] == "https://pilot.example"
+    assert "Authorization" in good.headers["access-control-allow-headers"]
+    assert good.headers.get("access-control-allow-credentials") is None
+    assert good.headers["vary"] == "Origin"
+
+    for origin in ("https://evil.example", "http://pilot.example",
+                   "https://pilot.example.evil.example"):
+        denied = client.options(endpoint, headers={**valid_preflight, "Origin": origin})
+        assert denied.status_code == 403
+        assert not denied.headers.get("access-control-allow-origin")
+        request = client.post(endpoint, json=payload(),
+                              headers={**telegram_auth(42), "Origin": origin})
+        assert request.status_code == 403
+
+    disallowed_headers = client.options(endpoint, headers={
+        **valid_preflight, "Access-Control-Request-Headers": "authorization,x-user-id",
+    })
+    assert disallowed_headers.status_code == 403
+    disallowed_method = client.options(endpoint, headers={
+        **valid_preflight, "Access-Control-Request-Method": "PUT",
+    })
+    assert disallowed_method.status_code == 403
+
+    result = client.post(endpoint, headers={**telegram_auth(42), "Origin": "https://pilot.example"},
+                         json=payload())
+    assert result.status_code == 201
+    assert result.headers["access-control-allow-origin"] == "https://pilot.example"
+    assert result.headers["cache-control"] == "no-store"
+    other_endpoint = client.get("/health", headers={"Origin": "https://pilot.example"})
+    assert other_endpoint.status_code == 200
+    assert not other_endpoint.headers.get("access-control-allow-origin")
+
+
+def test_cors_default_is_closed_without_configured_origin(client):
+    result = client.options("/api/v1/miniapp/coaching/sessions", headers={
+        "Origin": "https://pilot.example",
+        "Access-Control-Request-Method": "POST",
+        "Access-Control-Request-Headers": "authorization,content-type",
+    })
+    assert result.status_code == 403
+    assert "access-control-allow-origin" not in result.headers

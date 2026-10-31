@@ -100,7 +100,7 @@ def test_explicit_consent_adult_attestation_and_scoped_wheels(client):
     assert start(client, score=True).status_code == 422
     assert start(client, extra_user_id="other").status_code == 422
     assert start(client, score=None).status_code == 201
-    assert start(client, score=0).status_code == 201
+    assert start(client, user=43, score=0).status_code == 201
 
 
 def test_owner_isolation_on_read_turn_and_delete(client):
